@@ -1,0 +1,14 @@
+{
+  "name": "trader-agent",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "smoke": "NODE_EXTRA_CA_CERTS=$HOME/certs/russian-trusted-ca.pem node --env-file=.env scripts/smoke.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module"
+}
