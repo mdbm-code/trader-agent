@@ -6,7 +6,7 @@
 |---|---|---|---|---|---|
 | 1 | TypeScript-контур | — (typecheck/тесты как обратная связь) | `package.json`, `tsconfig.json`, `.nvmrc` | `typecheck`, `test`, `dev` выполняются без ошибок | ✅ |
 | 2 | `AppError` и порт `ErrorReporter` | Абстрактный класс, Порт | `shared/errors/app-error.ts(+test)`, `error-reporter.ts` | Наследники `AppError` корректно несут code/severity/context/cause | ✅ |
-| 3 | `CompositeErrorReporter` | Композит | `shared/errors/composite-error-reporter.ts(+test)`, `console-error-sink.ts(+test)` | Ошибка уходит во все приёмники; сбой одного не мешает другим | ⬜ |
+| 3 | `CompositeErrorReporter` | Композит | `shared/errors/composite-error-reporter.ts(+test)`, `console-error-sink.ts(+test)` | Ошибка уходит во все приёмники; сбой одного не мешает другим | ✅ |
 | 4 | Ограничитель повторов, маскировка | Декоратор | `shared/errors/rate-limited-error-reporter.ts(+test)`, `mask-secrets.ts(+test)` | Дубли ошибок не спамят; токены в тексте замаскированы | ⬜ |
 | 5 | `installProcessGuards`, `NotImplementedError` | Операционные vs программные ошибки, YAGNI | `app/process-guards.ts`, `shared/errors/not-implemented-error.ts(+test)` | `uncaughtException`/`unhandledRejection` уходят в `ErrorReporter` | ⬜ |
 | 6 | `Money` | Value Object | `shared/money/money.ts(+test)` | `add` иммутабелен; несовпадение валют — ошибка | ⬜ |
@@ -29,3 +29,7 @@ ADR пишем в уроке, где принимается решение; ур
   src/app/main-worker.ts`, без `watch`; `watch` — только режим разработки, `npm run dev`).
   Значит `tsx` как исполнитель нужен и в проде — вероятно, его место в `dependencies`, а не
   `devDependencies`. Обсудить и решить в уроке 13 вместе с содержимым `composition-root.ts`.
+- **К тегу sprint-02.** Тег `sprint-02` — точка извлечения универсального шаблона
+  `ts-service-template` (tsconfig, tsx/vitest, модуль ошибок, shared-ядро, CLAUDE.md/mentor,
+  структура docs). Извлекать, когда начнётся второй проект. В урок 14 — список, что общее,
+  а что торговое.

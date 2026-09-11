@@ -16,3 +16,14 @@
 export { AppError } from './app-error.ts';
 export type { Severity } from './app-error.ts';
 export type { ErrorReporter } from './error-reporter.ts';
+
+// CompositeErrorReporter и ConsoleErrorSink — классы (значения), ErrorSink и ErrorEvent —
+// только типы. toErrorEvent НЕ экспортируется: это внутренняя деталь реализации
+// CompositeErrorReporter, снаружи модуля она не нужна. Принцип минимального публичного
+// API — наружу отдаём только то, чем реально пользуются другие модули; чем меньше
+// публичная поверхность, тем свободнее потом менять внутренности errors/ без последствий
+// для остального кода.
+export { CompositeErrorReporter } from './composite-error-reporter.ts';
+export { ConsoleErrorSink } from './console-error-sink.ts';
+export type { ErrorEvent } from './error-event.ts';
+export type { ErrorSink } from './error-sink.ts';
