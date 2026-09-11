@@ -4,11 +4,19 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "dev": "NODE_EXTRA_CA_CERTS=$HOME/certs/russian-trusted-ca.pem tsx watch src/app/main-worker.ts",
     "smoke": "NODE_EXTRA_CA_CERTS=$HOME/certs/russian-trusted-ca.pem node --env-file=.env scripts/smoke.mjs"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "module"
+  "type": "module",
+  "devDependencies": {
+    "@types/node": "^24.13.4",
+    "typescript": "^7.0.2",
+    "tsx": "^4.23.13",
+    "vitest": "^5.0.0"
+  }
 }

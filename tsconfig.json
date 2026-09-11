@@ -1,0 +1,24 @@
+{
+  // strict: true — весь набор проверок null/undefined, неявного any и т.д.
+  // Без этого интерфейсы (основа DI и SOLID, раздел 6 архитектуры) не дают
+  // компилятору реальных гарантий — они превращаются в необязательные подсказки.
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+
+    // NodeNext резолвит модули как настоящий Node ESM: в относительном импорте
+    // ожидается расширение файла, который будет исполняться (.js), даже если
+    // исходник — .ts. allowImportingTsExtensions разрешает писать честное .ts.
+    // TypeScript допускает это только когда сам не эмитит .js (noEmit ниже) —
+    // у нас так и есть: tsc используется только как чекер (ADR 001), а
+    // исполняет код tsx, который сам разбирается с расширениями.
+    "allowImportingTsExtensions": true,
+    "noEmit": true
+  },
+  "include": ["src/**/*", "tests/**/*"]
+}

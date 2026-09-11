@@ -4,7 +4,7 @@
 
 | № | Тема | Паттерн/принцип | Файлы | Критерий готовности | Статус |
 |---|---|---|---|---|---|
-| 1 | TypeScript-контур | — (typecheck/тесты как обратная связь) | `package.json`, `tsconfig.json`, `.nvmrc` | `typecheck`, `test`, `dev` выполняются без ошибок | ⬜ |
+| 1 | TypeScript-контур | — (typecheck/тесты как обратная связь) | `package.json`, `tsconfig.json`, `.nvmrc` | `typecheck`, `test`, `dev` выполняются без ошибок | ✅ |
 | 2 | `AppError` и порт `ErrorReporter` | Абстрактный класс, Порт | `shared/errors/app-error.ts(+test)`, `error-reporter.ts` | Наследники `AppError` корректно несут code/severity/context/cause | ⬜ |
 | 3 | `CompositeErrorReporter` | Композит | `shared/errors/composite-error-reporter.ts(+test)`, `console-error-sink.ts(+test)` | Ошибка уходит во все приёмники; сбой одного не мешает другим | ⬜ |
 | 4 | Ограничитель повторов, маскировка | Декоратор | `shared/errors/rate-limited-error-reporter.ts(+test)`, `mask-secrets.ts(+test)` | Дубли ошибок не спамят; токены в тексте замаскированы | ⬜ |
@@ -20,3 +20,12 @@
 | 14 | ADR 001–010 и закрытие спринта | — (документирование решений) | `docs/architecture/adr/00N-*.md`, `docs/sprints/sprint-02-*.md`, `docs/ROADMAP.md` | `typecheck`/`test` зелёные; ADR и статус спринта зафиксированы | ⬜ |
 
 ADR пишем в уроке, где принимается решение; урок 14 — сверка и закрытие
+
+## Открытые вопросы
+
+- **К уроку 13.** Сейчас `tsx` — в `devDependencies` (урок 1), потому что предполагался
+  «продакшен-бандл» после сборки. Но по архитектуре сборки не будет: PM2 в проде запускает
+  робота тем же `tsx`, без отдельного шага `tsc`-компиляции в `.js` (в проде — просто `tsx
+  src/app/main-worker.ts`, без `watch`; `watch` — только режим разработки, `npm run dev`).
+  Значит `tsx` как исполнитель нужен и в проде — вероятно, его место в `dependencies`, а не
+  `devDependencies`. Обсудить и решить в уроке 13 вместе с содержимым `composition-root.ts`.

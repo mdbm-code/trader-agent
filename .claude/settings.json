@@ -1,5 +1,9 @@
 {
   "permissions": {
+    "allow": [
+      "Bash(npm run typecheck)",
+      "Bash(npm run test)"
+    ],
     "deny": [
       "Read(./.env)",
       "Edit(./.env)"
