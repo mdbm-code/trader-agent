@@ -11,6 +11,16 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
 
+    // tsc проверяет типы по всему проекту сразу и сам знает, что, скажем, ErrorReporter —
+    // интерфейс, а не значение. Но tsx и vitest транспилируют/исполняют файлы ПО ОТДЕЛЬНОСТИ
+    // через esbuild, который типов не читает вообще — только синтаксис. export { X } from '...'
+    // без слова type esbuild считает реэкспортом значения; если X — интерфейс (в рантайме не
+    // существует), реэкспорт упадёт при запуске ("does not provide an export named…"), хотя
+    // npm run typecheck при этом будет зелёным. verbatimModuleSyntax обязывает писать
+    // export type/import type явно везде, где экспортируется только тип, — и превращает эту
+    // ошибку в ошибку tsc, а не в сюрприз на исполнении.
+    "verbatimModuleSyntax": true,
+
     // NodeNext резолвит модули как настоящий Node ESM: в относительном импорте
     // ожидается расширение файла, который будет исполняться (.js), даже если
     // исходник — .ts. allowImportingTsExtensions разрешает писать честное .ts.

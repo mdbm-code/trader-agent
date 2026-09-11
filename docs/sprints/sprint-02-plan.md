@@ -5,7 +5,7 @@
 | № | Тема | Паттерн/принцип | Файлы | Критерий готовности | Статус |
 |---|---|---|---|---|---|
 | 1 | TypeScript-контур | — (typecheck/тесты как обратная связь) | `package.json`, `tsconfig.json`, `.nvmrc` | `typecheck`, `test`, `dev` выполняются без ошибок | ✅ |
-| 2 | `AppError` и порт `ErrorReporter` | Абстрактный класс, Порт | `shared/errors/app-error.ts(+test)`, `error-reporter.ts` | Наследники `AppError` корректно несут code/severity/context/cause | ⬜ |
+| 2 | `AppError` и порт `ErrorReporter` | Абстрактный класс, Порт | `shared/errors/app-error.ts(+test)`, `error-reporter.ts` | Наследники `AppError` корректно несут code/severity/context/cause | ✅ |
 | 3 | `CompositeErrorReporter` | Композит | `shared/errors/composite-error-reporter.ts(+test)`, `console-error-sink.ts(+test)` | Ошибка уходит во все приёмники; сбой одного не мешает другим | ⬜ |
 | 4 | Ограничитель повторов, маскировка | Декоратор | `shared/errors/rate-limited-error-reporter.ts(+test)`, `mask-secrets.ts(+test)` | Дубли ошибок не спамят; токены в тексте замаскированы | ⬜ |
 | 5 | `installProcessGuards`, `NotImplementedError` | Операционные vs программные ошибки, YAGNI | `app/process-guards.ts`, `shared/errors/not-implemented-error.ts(+test)` | `uncaughtException`/`unhandledRejection` уходят в `ErrorReporter` | ⬜ |
