@@ -3,29 +3,17 @@
 ## Контекст
 
 Спринт 02 — `docs/sprints/sprint-02-plan.md`, уроки 1–3 готовы (✅) в `src/shared/errors/`.
-Урок 4 в исходном плане спринта (паттерн Декоратор) разбит на **4a — маскировка** и
-**4b — ограничитель повторов**. Дополнительно введён чек-лист
-`docs/checklists/six-questions.md` — «ритуал шести вопросов устойчивости»: при планировании
-каждого шага с кодом и при проектировании тестов проходить шесть вопросов (`[исключение]`,
-`[гонка]`, `[завершение]`, `[секрет]`, `[рост]`, `[типы]`), фиксировать в плане таблицей
-«вопрос → тест или "не применимо, потому что…"», в названиях тестов — теги вопросов.
+Урок 4 (Декоратор) разбит на **4a — маскировка** и **4b — ограничитель повторов**. Процесс
+(`CLAUDE.md`/`.claude/output-styles/mentor.md`, ритуал шести вопросов) закреплён и закоммичен
+ранее — в этом плане не трогаем.
 
-Чек-лист уже содержит готовые примеры именно для урока 4a/4b (написан заранее, как ориентир):
-маскировка в `toErrorEvent`, запись ключа в `Map` до `await`, `flush()` до `await`, отпечаток
-`UNKNOWN_ERROR` цифры→`#`, `maxTrackedKeys` с корзиной переполнения, ограничение глубины
-`cause`, `timer.unref()`, метод `flushAll()` — накопленные сводки ограничителя не должны
-теряться при `process.exit` (раздел 3 чек-листа, `[завершение]`). Применение ритуала к уже
-спроектированным шагам 4a/4b вскрыло ещё два реальных пробела — см. находки в шаге 3 ниже.
-
-## Шаг 0 — правки процесса (выполнено ✅)
-
-`CLAUDE.md` — добавлен раздел «Шесть вопросов устойчивости» после «Правила кода» (ссылка на
-чек-лист, требование таблицы в плане шага, теги тестов, требование к ревью diff).
-
-`.claude/output-styles/mentor.md` — три правки: в разделе «План» — таблица шести вопросов для
-шагов с кодом + разовое предложение студенту назвать самый опасный вопрос до показа таблицы;
-в «Конец урока» — один из двух контрольных вопросов теперь из шести вопросов устойчивости, на
-новом материале; в «Ревью кода студента» — пункт «пройди шесть вопросов по коду».
+Это финальная (четвёртая) версия плана: три раунда ревью нашли баги в дизайне, включая баги
+**в самих предыдущих исправлениях** — не в исходном коде, а в том, что чинили. Главный урок:
+защита от одного риска может тихо создать другой (упрощение логирования в композите сняло
+защиту от синхронного throw при вычислении имени приёмника; попытка сохранить тип честной
+кастом-строкой `as string` сама была нечестной; независимые пределы `depth`/`items`
+перемножаются, если их не завязать на общий бюджет). Раздел «Четыре раунда ревью» в шаге 8
+разбирает это подробно как часть конспекта.
 
 ---
 
@@ -33,12 +21,14 @@
 
 ### Шаг 1 — `mask-secrets.ts` + `mask-secrets.test.ts`
 
-Шаблоны — массивом (новый формат секрета = одна строка); ведущий `\b`, без завершающего
-(токен может кончаться на `-`):
+Три шаблона — T-Invest, Telegram-бот, `Bearer`-заголовок любого формата (закрывает часть
+открытого вопроса «токен Telegram в URL» раньше срока — вместе с `URL`→`href` из шага 2):
 
 ```ts
 const SECRET_PATTERNS: readonly { pattern: RegExp; mask: string }[] = [
   { pattern: /\bt\.[\w-]{20,}/g, mask: 't.***' }, // токен T-Invest API
+  { pattern: /\b\d{6,}:[\w-]{30,}/g, mask: '[telegram-bot-token]' }, // токен Telegram-бота
+  { pattern: /\bBearer\s+[\w.-]{10,}/gi, mask: 'Bearer [masked]' }, // Authorization: Bearer …
 ];
 
 export function maskSecrets(text: string): string {
@@ -50,228 +40,503 @@ export function maskSecrets(text: string): string {
 
 | Вопрос | Ответ |
 |---|---|
-| `[исключение]` | Не применимо: чистая функция над гарантированным TS-типом `string`, `replaceAll` с корректным regex-литералом не бросает |
-| `[гонка]` | Не применимо: нет общего состояния, каждый вызов независим |
-| `[завершение]` | Не применимо: синхронная операция без побочных эффектов, нечего терять |
-| `[секрет]` | Тест: `[секрет]` токен в начале/середине/конце строки маскируется; несколько токенов в одной строке; токен, заканчивающийся на `-`, маскируется целиком (регресс на убранный завершающий `\b`); короткая последовательность `t.abc` ниже порога не маскируется |
-| `[рост]` | Не применимо: результат не накапливается, нет коллекций |
-| `[типы]` | Не применимо: параметр — гарантированный `string`; `[\w-]{20,}` без вложенных квантификаторов — не ReDoS |
+| `[исключение]` | Не применимо: чистая функция над `string`, `replaceAll` с корректным regex-литералом не бросает |
+| `[гонка]` | Не применимо: `replaceAll` не полагается на `lastIndex` общего regex-объекта |
+| `[завершение]` | Не применимо: синхронная операция без побочных эффектов |
+| `[секрет]` | Тест: токен T-Invest в начале/середине/конце строки; несколько токенов; токен на `-`; короткая последовательность ниже порога — не маскируется; telegram-токен маскируется; `Bearer <токен>` маскируется, префикс `Bearer ` остаётся читаемым; T-Invest и Telegram-токен в одной строке маскируются независимо |
+| `[рост]` | Не применимо: результат не накапливается |
+| `[типы]` | Ответственность разделена: сама функция закрыта тестами со строками; проверка `typeof === 'string'` до вызова — у каждого вызывающего места (тест в `error-event.ts`) |
 
-Тесты без тега (обычная корректность, не про устойчивость): без секретов — identity; пустая
-строка.
+Untagged: identity (без секретов), пустая строка, регресс на `lastIndex` (два вызова подряд —
+одинаковый результат).
 
-**Открытый вопрос (в конспект):** токен Telegram-бота в URL — Sprint 03, отдельная строка в
-`SECRET_PATTERNS`, когда появится `TelegramAlertSink`.
+**Открытый вопрос:** токен Telegram-бота в URL — Sprint 03 (частично закрыт: `SECRET_PATTERNS`
+и `URL → href` в шаге 2 уже ловят его в тексте/адресе).
 
-`maskSecrets` пока **не экспортируется** из `index.ts` — до урока 9 (`Logger`).
+`maskSecrets` не экспортируется из `index.ts` — до урока 9 (`Logger`).
 
-### Шаг 2 — правка `error-event.ts` (+ тесты в `error-event.test.ts`)
+### Шаг 2 — правка `error-event.ts` (+ тесты)
 
-Маскировка `message`/`stack` верхнего уровня — базовый случай. Плюс:
-
-**Цепочка `cause`** — приватная `maskCause(cause, depth, seen)`, глубина ≤ 5, `WeakSet` против
-циклов, снимок — plain-object (`name`/`message`/`stack`/`cause`), не «живой» `Error`.
-
-**Контекст рекурсивно** — приватная `maskContextValue(key, value, seen)`: строки — маскировка
-по содержимому (`maskSecrets`) или, если имя ключа подозрительное
-(`token|secret|password|authorization|apikey`, без регистра), — маскировка целиком независимо
-от формата; объекты/массивы — рекурсия с тем же `WeakSet`; нестроковые значения (`bigint`,
-числа) не трогаем.
-
-**Исправление от ритуала (найдено на вопросе `[типы]`, применяем сразу):** если в `context`
-кладут `Error` напрямую (не через `cause`, например `{ lastError: someError }`), `stack` у
-`Error` в V8 — не всегда enumerable-свойство, обычный `Object.entries` его может не увидеть —
-маскировка молча пропустит `stack`, а в нём может быть токен. Фикс: `maskContextValue`
-проверяет `value instanceof Error` **до** попытки перечисления свойств и делегирует в тот же
-`maskCause`, что и для `cause` (он читает `.message`/`.stack`/`.cause` по имени, а не через
-`Object.entries`):
+Общий, не сбрасывающийся `depth` + общий бюджет узлов на весь вызов `toErrorEvent` — иначе
+чередование `cause`↔`context` обходит оба предела по отдельности, а независимые пределы
+глубины/размера коллекции перемножаются на патологическом входе (до 50⁶ узлов):
 
 ```ts
-function maskContextValue(key: string | null, value: unknown, seen: WeakSet<object>): unknown {
-  if (typeof value === 'string') {
-    return key !== null && SENSITIVE_KEY.test(key) ? '[masked]' : maskSecrets(value);
+interface MaskWalk {
+  readonly ancestors: Set<object>; // предки текущего пути рекурсии — для циклов
+  budget: number;                  // общий бюджет узлов на весь вызов — против N^depth
+}
+
+// 8 — с запасом покрывает любую реалистичную ошибку (cause-цепочка в несколько уровней +
+// context в несколько уровней), но не даёт зацикленной библиотеке-обёртке или намеренно
+// патологическому входу рекурсировать бесконечно. Один счётчик на cause И context вместе —
+// раздельные счётчики обходятся чередованием типов на границе.
+const MAX_DEPTH = 8;
+// 50 сущностей в context/cause — то, что разработчик мог положить руками (список ордеров за
+// тик, батч свечей). Больше — почти наверняка не диагностика, а целый датасет, попавший в
+// context по ошибке.
+const MAX_COLLECTION_ITEMS = 50;
+// 1000 контейнеров суммарно за вызов — с запасом покрывает любую реалистичную ошибку на полную
+// глубину и с полными коллекциями на каждом уровне, но не даёт патологическому 50-на-каждом-
+// из-6-уровней входу (до 50⁶ узлов) обработаться за неприемлемое время.
+const MAX_NODE_BUDGET = 1000;
+```
+
+Честные типы вместо `as string` — нормализация ГАРАНТИРУЕТ `message: string`/
+`stack: string | undefined`, а не лжёт компилятору приведением типа:
+
+```ts
+function toSafeString(value: unknown): string {
+  try {
+    return truncateAfterMasking(maskSecrets(typeof value === 'string' ? value : String(value)));
+  } catch {
+    return '[unprintable]'; // String(value) тоже может бросить — Object.create(null), урок 3
   }
-  if (value === null || typeof value !== 'object') return value;
-  if (value instanceof Error) return maskCause(value, 0, seen); // см. исправление выше
-  if (seen.has(value)) return '[circular]';
-  seen.add(value);
-  if (Array.isArray(value)) return value.map((item) => maskContextValue(null, item, seen));
-  return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, maskContextValue(k, v, seen)]));
+}
+
+function toSafeStack(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined; // тип соврал — отбрасываем, не пробрасываем как есть
+  return truncateAfterMasking(maskSecrets(value));
 }
 ```
 
-`cause` и `context` используют **один и тот же `WeakSet`** за один вызов `toErrorEvent` (а не
-два отдельных) — защищает и от патологического случая, когда один и тот же объект встречается
-и в `cause`, и в `context`.
+Обрезка длины — ПОСЛЕ маскировки, не до (иначе токен, разрезанный обрезкой пополам, может
+остаться короче порога шаблона `{20,}` и не совпасть с regex — видимый хвост утечёт):
+
+```ts
+// 2000 символов с запасом покрывает любое человекочитаемое сообщение об ошибке и разумный
+// stack trace. Длиннее — уже не диагностика для человека, а вероятный сериализованный дамп
+// данных, случайно попавший в message при throw.
+const MAX_STRING_LENGTH = 2000;
+
+function truncateAfterMasking(masked: string): string {
+  return masked.length > MAX_STRING_LENGTH ? `${masked.slice(0, MAX_STRING_LENGTH)}[...truncated]` : masked;
+}
+```
+
+Мердж контекста по ключам (не спред: `{ ...context, ...error.context }` вычисляет все геттеры
+сразу — один бросающий роняет `toErrorEvent` целиком, ретрофикс урока 3):
+
+```ts
+function mergeContext(base: Record<string, unknown>, overrides: Record<string, unknown>): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  for (const k of Object.keys(base)) {
+    try { result[k] = base[k]; } catch { result[k] = '[unreadable]'; }
+  }
+  for (const k of Object.keys(overrides)) {
+    try { result[k] = overrides[k]; } catch { result[k] = '[unreadable]'; }
+  }
+  return result;
+}
+```
+
+Полная маскировка `cause`/`context` — единый бюджет обхода (`walk`), `Map`/`Set` — не как
+обычные объекты, `Date`/`URL`/`Buffer`/`TypedArray` — по своим правилам, собственные поля
+системных ошибок (`code`/`errno`/`syscall`/`hostname`) и `AggregateError.errors` — через ту же
+рекурсию, маскировка по имени ключа (включая объект-значение, не только строку), ancestors —
+по предкам текущего пути (не «посещённые навсегда» — общая ссылка в `cause` и `context`
+одновременно не цикл), локальная деградация поля при бросающем геттере:
+
+```ts
+const SENSITIVE_KEY =
+  /token|secret|password|authorization|api[-_]?key|private[-_]?key|mnemonic|seed|cookie|credential|passphrase/i;
+const RESERVED_ERROR_KEYS = new Set(['message', 'stack', 'cause', 'name']);
+
+function maskCause(cause: unknown, depth: number, walk: MaskWalk): unknown {
+  if (typeof cause === 'string') return truncateAfterMasking(maskSecrets(cause));
+  if (cause === null || typeof cause !== 'object') return cause;
+  if (walk.ancestors.has(cause)) return '[circular]';
+  if (depth >= MAX_DEPTH) return '[depth exceeded]';
+  if (walk.budget <= 0) return '[budget exceeded]';
+  walk.budget--;
+
+  if (!(cause instanceof Error)) return maskContextValue(null, cause, depth + 1, walk);
+
+  walk.ancestors.add(cause);
+  try {
+    const masked = new Error(toSafeString(cause.message));
+    masked.name = cause.name; // геттер name/stack, бросающий при чтении, — открытый вопрос
+    masked.stack = toSafeStack(cause.stack);
+    if ('cause' in cause) (masked as { cause?: unknown }).cause = maskCause(cause.cause, depth + 1, walk);
+
+    // Node-овые системные ошибки кладут суть сбоя в собственные перечисляемые поля —
+    // code ('ECONNRESET'), errno, syscall, hostname, port — не в message/stack.
+    const skipKeys = cause instanceof AggregateError ? new Set([...RESERVED_ERROR_KEYS, 'errors']) : RESERVED_ERROR_KEYS;
+    for (const k of Object.keys(cause)) {
+      if (skipKeys.has(k)) continue;
+      try {
+        (masked as Record<string, unknown>)[k] = maskContextValue(k, (cause as Record<string, unknown>)[k], depth + 1, walk);
+      } catch {
+        (masked as Record<string, unknown>)[k] = '[unreadable]';
+      }
+    }
+    if (cause instanceof AggregateError) {
+      // fetch в Node заворачивает сетевой сбой сюда — продолжаем ТОТ ЖЕ depth, не сбрасываем.
+      (masked as { errors?: unknown[] }).errors = cause.errors.map((e) => maskCause(e, depth + 1, walk));
+    }
+    if (cause instanceof AppError) {
+      Object.assign(masked, { code: cause.code, severity: cause.severity, context: maskContextValue(null, cause.context, depth + 1, walk) });
+    }
+    return Object.freeze(masked);
+  } finally {
+    walk.ancestors.delete(cause);
+  }
+}
+
+function maskContextValue(key: string | null, value: unknown, depth: number, walk: MaskWalk): unknown {
+  const sensitiveKey = key !== null && SENSITIVE_KEY.test(key);
+  if (sensitiveKey && (typeof value === 'string' || (value !== null && typeof value === 'object'))) return '[masked]';
+  if (typeof value === 'string') return truncateAfterMasking(maskSecrets(value));
+  if (value === null || typeof value !== 'object') return value; // bigint, число — не трогаем
+
+  if (value instanceof Date) return value; // МУТАБЕЛЕН по ссылке — открытый вопрос
+  if (value instanceof URL) return maskSecrets(value.href);
+  if (ArrayBuffer.isView(value) || value instanceof ArrayBuffer) return `[binary ${value.byteLength} bytes]`;
+  if (value instanceof Error) return maskCause(value, depth + 1, walk);
+
+  if (walk.ancestors.has(value)) return '[circular]';
+  if (depth >= MAX_DEPTH) return '[depth exceeded]';
+  if (walk.budget <= 0) return '[budget exceeded]';
+  walk.budget--;
+
+  walk.ancestors.add(value);
+  try {
+    if (value instanceof Map) {
+      const entries = [...value.entries()];
+      const limited = entries.slice(0, MAX_COLLECTION_ITEMS).map(([k, v]) => Object.freeze([
+        maskContextValue(null, k, depth + 1, walk),
+        // Ключ Map — тоже имя поля: new Map([['authorization', 'Bearer …']]) обязан
+        // маскироваться по ключу так же, как { authorization: '...' } в обычном объекте.
+        maskContextValue(typeof k === 'string' ? k : null, v, depth + 1, walk),
+      ]));
+      if (entries.length > MAX_COLLECTION_ITEMS) limited.push(`[...ещё ${entries.length - MAX_COLLECTION_ITEMS}]`);
+      return Object.freeze(limited);
+    }
+    if (value instanceof Set) {
+      const items = [...value.values()];
+      const limited = items.slice(0, MAX_COLLECTION_ITEMS).map((v) => maskContextValue(null, v, depth + 1, walk));
+      if (items.length > MAX_COLLECTION_ITEMS) limited.push(`[...ещё ${items.length - MAX_COLLECTION_ITEMS}]`);
+      return Object.freeze(limited);
+    }
+    if (Array.isArray(value)) {
+      const limited = value.slice(0, MAX_COLLECTION_ITEMS).map((item) => maskContextValue(null, item, depth + 1, walk));
+      if (value.length > MAX_COLLECTION_ITEMS) limited.push(`[...ещё ${value.length - MAX_COLLECTION_ITEMS}]`);
+      return Object.freeze(limited);
+    }
+    const keys = Object.keys(value); // не видит #private-поля класса — открытый вопрос
+    const result: Record<string, unknown> = {};
+    for (const k of keys.slice(0, MAX_COLLECTION_ITEMS)) {
+      try { result[k] = maskContextValue(k, (value as Record<string, unknown>)[k], depth + 1, walk); }
+      catch { result[k] = '[unreadable]'; } // геттер поля бросил — деградируем локально
+    }
+    if (keys.length > MAX_COLLECTION_ITEMS) result['__truncated__'] = `[...ещё ${keys.length - MAX_COLLECTION_ITEMS} полей]`;
+    return Object.freeze(result); // глубокая заморозка — каждый построенный узел
+  } finally {
+    walk.ancestors.delete(value);
+  }
+}
+
+function freezeEvent(context: Record<string, unknown>, rest: Omit<ErrorEvent, 'context'>): ErrorEvent {
+  const walk: MaskWalk = { ancestors: new Set<object>(), budget: MAX_NODE_BUDGET };
+  return Object.freeze({
+    ...rest,
+    message: toSafeString(rest.message),
+    stack: toSafeStack(rest.stack),
+    cause: rest.cause === undefined ? undefined : maskCause(rest.cause, 0, walk),
+    context: maskContextValue(null, context, 0, walk) as Readonly<Record<string, unknown>>,
+  });
+}
+```
+
+В ветке `AppError` внутри `toErrorEvent` — `mergeContext(context, error.context)` вместо
+`{ ...context, ...error.context }`.
 
 **Таблица шести вопросов:**
 
 | Вопрос | Ответ |
 |---|---|
-| `[исключение]` | Тест: `context` содержит значение с геттером, бросающим при чтении — `toErrorEvent` не падает (расширяем на маскировку зону действия существующего try/catch урока 3) |
-| `[гонка]` | Не применимо: чистое синхронное преобразование, `WeakSet` локален одному вызову |
+| `[исключение]` | Тесты: геттер, бросающий на верхнем уровне `context`/`error.context` (`mergeContext`) и на вложенном поле (`maskContextValue`) — деградирует только затронутый ключ, не роняет `toErrorEvent` |
+| `[гонка]` | Не применимо: чистое синхронное преобразование, `walk` создаётся заново на каждый вызов |
 | `[завершение]` | Не применимо: между вызовами ничего не накапливается |
-| `[секрет]` | Тесты: токен в `message`; в `stack`; в `cause.message` (1 уровень); цепочка `cause` глубже 5 — обрезается меткой; `cause`, ссылающийся сам на себя — не зацикливается; токен в плоском `context`; во вложенном объекте; в массиве; циклический `context`; ключ `Authorization` (регистр не важен) со значением-непохожим-на-токен — всё равно скрыт; `Error` напрямую в `context` (не в `cause`) с токеном в `stack` — тоже замаскирован (тест на исправление выше) |
-| `[рост]` | Тест: цепочка `cause` из 10 звеньев — рекурсия останавливается на глубине 5; циклический `cause`/`context` — не растит стек бесконечно |
-| `[типы]` | Тест: `Error`, положенный в `context` напрямую — `stack` не enumerable, `Object.entries` его не увидит без явной проверки `instanceof Error`; bigint под ключом `token` — не тронут (не строка, маскировать нечего) |
+| `[секрет]` | Токен в `message`/`stack`/цепочке `cause` (глубже `MAX_DEPTH` — обрезается); циклический `cause`/`context` — не зацикливается; плоский/вложенный/массивный `context`; ключ `Authorization` — строка ИЛИ объект скрыты целиком; `api_key`/`private_key`/`mnemonic`/`seed`/`cookie`/`credential`/`passphrase` — тоже распознаются; `Map` с ключом `'authorization'` — по имени ключа; `URL` с токеном в query — через `href`; `Error` напрямую в `context` — через `maskCause`; объект-не-`Error` в `cause` — как context; системная ошибка (`code`/`errno`/`syscall`/`hostname`) в `cause` — поля скопированы и замаскированы; `AggregateError.errors` — вложенные причины замаскированы; токен на границе `MAX_STRING_LENGTH` — маскируется целиком (маска → обрезка, не наоборот) |
+| `[рост]` | Цепочка `cause` из 10 звеньев — остановка на `MAX_DEPTH`; общая ссылка на один объект одновременно в `cause` и `context` — не цикл; объект 50×50×50 — обрабатывается быстро, обрезан по бюджету; цепочка `Error → объект → Error → …` глубиной 100 — ограничена общим `MAX_DEPTH`, не сбрасывается на переходах типов |
+| `[типы]` | `Error` напрямую в `context` — `stack` не enumerable, нужен явный `instanceof Error`; bigint под ключом `token` — не тронут; `Date`/`Map`/`Set` — не превращаются в `{}`; `Buffer`/`TypedArray` — `[binary N bytes]`; `err.message = 123` и `Object.create(null)` — `toSafeString` не бросает, даёт `'123'`/`'[unprintable]'`, не мусор с ложной гарантией `string` |
 
-Прогнать все существующие тесты `error-event.test.ts` — не должны сломаться.
+Untagged: построенное дерево заморожено на каждом уровне. Прогнать все существующие тесты
+`error-event.test.ts`.
 
 ---
 
-## 4b — ограничитель повторов, `index.ts`, ADR-011
+## 4b — общий хелпер логирования, ограничитель, ретрофикс композита, `index.ts`, ADR-011
 
-### Шаг 3 — `rate-limited-error-reporter.ts` + тест
+### Шаг 3 — `log-delivery-failure.ts` + тест
+
+Общая точка безопасного логирования сбоя ДОСТАВКИ отчёта (не самой ошибки) — использует
+`CompositeErrorReporter` и `RateLimitedErrorReporter`. Не экспортируется из `index.ts`.
 
 ```ts
+import { toErrorEvent } from './error-event.ts';
+
+export function logDeliveryFailure(label: string, reason: unknown): void {
+  try {
+    const safe = toErrorEvent(reason);
+    // stack — отдельным аргументом console.error, не полем объекта: многострочный текст
+    // стека не тонет внутри однострочной печати объекта.
+    console.error(label, { message: safe.message, cause: safe.cause, context: safe.context }, safe.stack);
+  } catch {
+    // последний рубеж — сюда уже некуда логировать сбой самого логирования
+  }
+}
+```
+
+**Таблица шести вопросов:**
+
+| Вопрос | Ответ |
+|---|---|
+| `[исключение]` | Тест: `console.error` сам бросает — `logDeliveryFailure` не пробрасывает исключение |
+| `[гонка]` | Не применимо: нет общего состояния |
+| `[завершение]` | Не применимо: синхронная печать |
+| `[секрет]` | Тест: `reason` с токеном в `message` и в `stack` — ни в одном аргументе `console.error` токена нет |
+| `[рост]` | Не применимо |
+| `[типы]` | Не применимо: `reason: unknown` уходит в уже безопасную `toErrorEvent` |
+
+### Шаг 4 — `rate-limited-error-reporter.ts` + тест
+
+Параметры — объектом опций; критические-но-не-фатальные ошибки участвуют в троттлинге со
+своим коротким окном (не обходят его совсем); ключ — `severity:code` с отпечатком ≤ 200
+символов (UUID/hex тоже → `#`) и отдельной корзиной переполнения на severity; `fatal` — из
+исходного `context` вызова, не из смерженного `event.context`; снимок `event.context`, не
+ссылка на объект вызывающего; тело `report()` целиком — «последний рубеж»; после `flushAll()`
+— необратимый режим слива без троттлинга.
+
+```ts
+export interface RateLimitedErrorReporterOptions {
+  readonly windowMs?: number;
+  readonly criticalWindowMs?: number;
+  readonly maxTrackedKeys?: number;
+}
+
+const OVERFLOW_KEY = '__overflow__';
+// 200 символов — отпечаток используется как ключ Map, а не как диагностика для человека:
+// message уже мог быть обрезан до 2000 символов (MAX_STRING_LENGTH), этого достаточно для
+// читаемости, но избыточно много для ключа коллекции.
+const MAX_FINGERPRINT_LENGTH = 200;
+
 export class RateLimitedErrorReporter implements ErrorReporter {
+  private readonly windowMs: number;
+  private readonly criticalWindowMs: number;
+  private readonly maxTrackedKeys: number;
   private readonly state = new Map<string, {
-    count: number; error: unknown; context: Record<string, unknown>;
+    count: number; error: unknown; context: Readonly<Record<string, unknown>>;
     timer: ReturnType<typeof setTimeout>;
   }>();
+  private drained = false;
 
-  constructor(
-    private readonly inner: ErrorReporter,
-    private readonly windowMs: number = 5 * 60 * 1000,
-    private readonly maxTrackedKeys: number = 500,
-  ) {}
+  constructor(private readonly inner: ErrorReporter, options: RateLimitedErrorReporterOptions = {}) {
+    // 5 минут — дословно из раздела 15 архитектуры: «через несколько минут приходит
+    // "повторилась 37 раз"».
+    this.windowMs = options.windowMs ?? 5 * 60 * 1000;
+    // 1 минута — короче обычного: критическая ошибка обязана дойти быстро, но всё ещё гасит
+    // короткий всплеск повторов одной причины. Без предела шторм РАЗНЫХ критических кодов
+    // завалил бы канал доставки так же, как без ограничителя вовсе.
+    this.criticalWindowMs = options.criticalWindowMs ?? 60 * 1000;
+    // 500 ключей — с запасом покрывает число реальных типов сбоёв; то, что не укладывается,
+    // скорее всего, уже не код ошибки, а строка, сгенерированная на лету (см. переполнение).
+    this.maxTrackedKeys = options.maxTrackedKeys ?? 500;
+  }
 
   async report(error: unknown, context: Record<string, unknown> = {}): Promise<void> {
-    const event = toErrorEvent(error, context);
-    const key = this.resolveKey(event);
-    const existing = this.state.get(key);
-
-    if (existing !== undefined) {
-      existing.count++;
-      existing.error = error;      // сводка несёт ПОСЛЕДНИЙ подавленный повтор
-      existing.context = context;
-      return;
-    }
-
-    // Ключ пишем в Map СИНХРОННО, ДО await ниже — см. [гонка]. Между report() без await
-    // между ними JS не переключится на другой вызов посреди синхронного участка: второй
-    // вызов уже увидит ключ в Map и будет подавлен. Тот же принцип — в flush(): delete до await.
-    const timer = setTimeout(() => void this.flush(key), this.windowMs);
-    timer.unref?.();
-    this.state.set(key, { count: 0, error, context, timer });
-
     try {
-      await this.inner.report(error, context);
+      const event = toErrorEvent(error, context);
+
+      // fatal — из ИСХОДНОГО context вызова, не из event.context: собственный context
+      // ошибки может случайно перекрыть { fatal: true } вызывающего своим { fatal: false }.
+      // drained — после flushAll() новые окна больше не заводим.
+      if (this.drained || context.fatal === true) {
+        try { await this.inner.report(error, context); }
+        catch (reason) { logDeliveryFailure('RateLimitedErrorReporter: inner.report failed', reason); }
+        return;
+      }
+
+      const windowMs = event.severity === 'critical' ? this.criticalWindowMs : this.windowMs;
+      const key = this.resolveKey(event);
+      const existing = this.state.get(key);
+
+      if (existing !== undefined) {
+        existing.count++;
+        existing.error = error;
+        existing.context = event.context; // снимок, не ссылка на context вызывающего
+        return;
+      }
+
+      const timer = setTimeout(() => void this.flush(key), windowMs);
+      timer.unref?.();
+      this.state.set(key, { count: 0, error, context: event.context, timer });
+
+      try {
+        await this.inner.report(error, context);
+      } catch (reason) {
+        logDeliveryFailure('RateLimitedErrorReporter: inner.report failed', reason);
+      }
     } catch (reason) {
-      this.logFailure(reason);
+      // «Последний рубеж» на весь метод, не только на вызов inner.report.
+      logDeliveryFailure('RateLimitedErrorReporter: report() failed internally', reason);
     }
   }
 
-  /** Забрать все накопленные сводки немедленно — вызывается при graceful shutdown (урок 5/13). */
   async flushAll(): Promise<void> {
+    this.drained = true; // до await — новые report() увидят это сразу
     await Promise.all([...this.state.keys()].map((key) => this.flush(key)));
   }
 
   private async flush(key: string): Promise<void> {
     const entry = this.state.get(key);
-    this.state.delete(key); // до await — см. комментарий в report()
+    this.state.delete(key);
     if (entry === undefined) return;
-    clearTimeout(entry.timer); // на случай ручного flushAll() раньше срабатывания таймера
-    if (entry.count === 0) return; // повторов не было — сводка не нужна
-
+    clearTimeout(entry.timer);
+    if (entry.count === 0) return;
     try {
       await this.inner.report(entry.error, { ...entry.context, repeatCount: entry.count });
     } catch (reason) {
-      this.logFailure(reason);
+      logDeliveryFailure('RateLimitedErrorReporter: inner.report failed', reason);
     }
   }
 
   private resolveKey(event: ErrorEvent): string {
-    const rawKey = event.code === 'UNKNOWN_ERROR'
-      ? `UNKNOWN_ERROR:${event.message.replace(/\d+/g, '#')}` // отпечаток — [рост]
-      : event.code;
-
-    if (rawKey !== OVERFLOW_KEY && !this.state.has(rawKey) && this.state.size >= this.maxTrackedKeys) {
-      return OVERFLOW_KEY; // предел ключей — [рост]
+    const fingerprint = event.code === 'UNKNOWN_ERROR' ? this.fingerprintMessage(event.message) : event.code;
+    const rawKey = `${event.severity}:${fingerprint}`;
+    const overflowKey = `${OVERFLOW_KEY}:${event.severity}`;
+    if (rawKey !== overflowKey && !this.state.has(rawKey) && this.state.size >= this.maxTrackedKeys) {
+      return overflowKey;
     }
     return rawKey;
   }
 
-  private logFailure(reason: unknown): void {
-    // Исправление от ритуала ([секрет]): reason — сырой сбой inner.report (например,
-    // сетевая ошибка Telegram-sink с токеном бота прямо в URL, см. six-questions.md
-    // раздел 4). Раньше здесь напрямую печатали reason в console.error — прямая утечка
-    // мимо всей маскировки toErrorEvent. Прогоняем reason через тот же toErrorEvent —
-    // тем же путём, что обычная ошибка, получаем уже замаскированные message/context.
-    try {
-      const safe = toErrorEvent(reason);
-      console.error('RateLimitedErrorReporter: inner.report failed', safe.message, safe.context);
-    } catch {
-      // последний рубеж, тот же приём, что в CompositeErrorReporter
-    }
+  private fingerprintMessage(message: string): string {
+    const normalized = message
+      .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '#') // UUID — раньше hex
+      .replace(/\b[0-9a-f]{16,}\b/gi, '#') // длинный hex (хэши, id)
+      .replace(/\d+/g, '#');
+    return normalized.length > MAX_FINGERPRINT_LENGTH ? normalized.slice(0, MAX_FINGERPRINT_LENGTH) : normalized;
   }
 }
-
-const OVERFLOW_KEY = '__overflow__';
 ```
 
 **Таблица шести вопросов:**
 
 | Вопрос | Ответ |
 |---|---|
-| `[исключение]` | Тесты: `[исключение]` сбой `inner.report` при немедленной отправке не роняет `report()`; `[исключение]` сбой `inner.report` внутри `flush()` не роняет её и не даёт `unhandledRejection` |
-| `[гонка]` | Тест: `[гонка]` несколько `report()` с одинаковым ключом подряд без `await` между ними — `inner.report` вызван ровно 1 раз, остальные подавлены |
-| `[завершение]` | Тест: `[завершение]` накоплены подавленные повторы на двух разных ключах, вызван `flushAll()` до срабатывания таймеров — обе сводки отправлены, `state` пуст, все таймеры очищены (`vi.getTimerCount() === 0`) |
-| `[секрет]` | Тест: `[секрет]` `inner.report` отклоняется ошибкой с токеном в `message` — то, что попадает в `console.error` через `logFailure`, токена не содержит (использован тот же `toErrorEvent`) |
-| `[рост]` | Тесты: `[рост]` отпечаток — `UNKNOWN_ERROR` с разными числами в сообщении считаются одним ключом, с разным текстом — разными; `[рост]` переполнение — при `maxTrackedKeys: 2` третий отличный код уходит в `OVERFLOW_KEY`, `Map` не растёт дальше лимита |
-| `[типы]` | Тест: `[типы]` `inner.report` — обычная (не `async`) функция, бросающая **синхронно** при вызове, до возврата какого-либо `Promise` — `report()` всё равно не бросает (тип `Promise<void>` в `ErrorReporter` не гарантирует, что реализация асинхронна; `try { await ... }` ловит и синхронный throw при вызове выражения внутри `try`) |
+| `[исключение]` | Сбой немедленной отправки; сбой внутри `flush()`; вся `report()` в защите |
+| `[гонка]` | Несколько `report()` без await между ними — 1 вызов `inner.report` |
+| `[завершение]` | `flushAll()` не теряет накопленное, переходит в режим слива; `context.fatal: true` — всегда немедленно, даже если `error.context.fatal === false`; `severity: 'critical'` (не fatal) — не безусловный обход, троттлится своим коротким окном |
+| `[секрет]` | Сбой `inner.report` с токеном — не светит его через `logDeliveryFailure` |
+| `[рост]` | Отпечаток `UNKNOWN_ERROR`; переполнение `maxTrackedKeys` по каждому severity; UUID/длинный hex → `#`; сообщение длиннее 200 символов — отпечаток обрезан |
+| `[типы]` | Синхронный `throw` в не-`async` `inner.report` — не роняет `report()` |
 
-Дополнительные обычные тесты (без тега — они про базовое поведение декоратора, не про
-устойчивость): первая ошибка уходит сразу; вторая того же кода в пределах окна (последовательно,
-с `await`) не уходит сразу; сводка приходит после `vi.advanceTimersByTimeAsync(windowMs)` с
-верным `repeatCount`; без повторов за окно — сводки нет; разные коды не блокируют друг друга;
-тот же код после закрытия окна — снова считается первым; сводка несёт контекст **последнего**
-подавленного повтора, а не первого.
+Untagged: базовое поведение декоратора, снимок контекста от мутации вызывающим, `severity:code`
+— критическая и обычная ошибка с одинаковым `code` троттлятся раздельно.
 
-`timer.unref()` отдельным тестом не проверяется (не тестируется содержательно под fake timers)
-— фиксируется как ручная проверка в конце урока.
+### Шаг 5 — ретроактивный фикс `composite-error-reporter.ts`
 
-### Шаг 4 — правка `index.ts`
+Внешний `try/catch` вокруг цикла — обязателен: `sink.constructor.name` вычисляется ДО входа в
+`logDeliveryFailure`, вне её защиты. Приёмник без прототипа (`Object.create(null)`) не имеет
+`constructor` — `.name` на `undefined` бросает `TypeError`, ничем не перехваченный без внешней
+защиты.
 
-Экспортировать только `RateLimitedErrorReporter`. `maskSecrets` — не экспортировать (см. 4a,
-шаг 1). Ритуал шести вопросов к этой правке не применяется — реэкспорт без своего поведения,
-нет ни одного применимого вопроса, тестов нет.
+```ts
+try {
+  for (const { sink, reason } of failures) {
+    logDeliveryFailure(`ErrorSink failed: ${sink.constructor.name}`, reason);
+  }
+} catch {
+  // последний рубеж — sink.constructor.name сам может бросить, и это происходит ДО
+  // logDeliveryFailure, вне её собственной защиты
+}
+```
 
-### Шаг 5 — ADR-011
+**Шесть вопросов:** только `[секрет]` (не изменился от прошлой правки) и новый
+`[исключение]` — тест: приёмник из `Object.create(null)`, чей `send()` отклоняется, —
+`report()` композита всё равно резолвится.
 
-`docs/architecture/adr/011-error-reporter-pipeline.md`, формат как `001-typescript.md`.
+### Шаг 6 — правка `index.ts`
 
-- **Контекст.** Требования уроков 2–4: единый контракт, рассылка без взаимного влияния сбоев,
-  отсутствие спама дублями, отсутствие утечки секретов, устойчивость к гонкам и к завершению
-  процесса с несохранённым состоянием.
+Экспортировать `RateLimitedErrorReporter` и `RateLimitedErrorReporterOptions`. `maskSecrets`,
+`logDeliveryFailure` — не экспортировать.
+
+### Шаг 7 — ADR-011
+
+`docs/architecture/adr/011-error-reporter-pipeline.md`.
+
+- **Контекст.** Единый контракт, рассылка без взаимного влияния сбоев, отсутствие спама
+  дублями (включая критические — без потери самих критических), отсутствие утечки секретов (в
+  самой ошибке и в отчёте о сбое её доставки), устойчивость к гонкам, к завершению процесса, к
+  неограниченно большим/глубоким данным ошибки.
 - **Решение.** `new RateLimitedErrorReporter(new CompositeErrorReporter([...sinks]))`.
-  Маскировка — часть нормализации `toErrorEvent` (`message`/`stack`/цепочка `cause` до глубины
-  5/`context` рекурсивно, включая `Error` как значение `context` напрямую), а не отдельный слой.
-  Троттлинг — ключ `code` (для `UNKNOWN_ERROR` — отпечаток `message`, цифры → `#`), окно
-  `windowMs` (5 мин по умолчанию), `maxTrackedKeys` (500 по умолчанию) с корзиной
-  переполнения. Состояние пишется в `Map` синхронно до `await` — и при отправке, и при
-  `flush()`. `flushAll()` — забрать накопленные сводки при штатном завершении процесса
-  (используется из `installProcessGuards`, урок 5). Сбой самого `inner.report` логируется через
-  `toErrorEvent` — тем же путём маскировки, что обычная ошибка, а не напрямую.
-- **Альтернативы (отклонены):** маскировка внутри декоратора; чистый троттлинг без сводки;
-  ключ строго по `code` без отпечатка; порт `Clock` сейчас (YAGNI, `vi.useFakeTimers()`
-  достаточно — Clock появится в уроке 8); запись в `Map` после `await`; неограниченный `Map`
-  ключей; логирование сбоя `inner.report` напрямую (без прогона через `toErrorEvent`) — нашли
-  на ритуале шести вопросов, отклонено как прямая утечка секрета в обход маскировки.
-- **Последствия.** Троттлинг не различает `severity`; маскировка по формату — только токен
-  T-Invest (расширяется по мере появления новых форматов, `SECRET_PATTERNS` — массив);
-  корзина переполнения группирует разнородные ошибки грубо; `flushAll()` объявлен, но не
-  подключён к сигналам процесса — это задача урока 5.
+  Маскировка — часть нормализации `toErrorEvent`: единый бюджет обхода (`ancestors` + `budget`,
+  не сбрасывается на границе `cause`/`context`); честные типы через `toSafeString`/`toSafeStack`
+  без `as`; обрезка длины строго после маскировки; `Map`/`Set`/`Date`/`URL`/`Buffer` — по своим
+  правилам; маскировка по имени ключа (`token|secret|password|authorization|api[-_]?key|
+  private[-_]?key|mnemonic|seed|cookie|credential|passphrase`) независимо от формата значения;
+  собственные поля системных ошибок и `AggregateError.errors` в `cause`; циклы — по предкам
+  текущего пути, не «всё когда-либо посещённое»; локальная деградация поля при бросающем
+  геттере, включая верхний уровень мерджа `context`/`error.context`; глубокая заморозка.
+  Троттлинг — ключ `severity:code` (отпечаток для `UNKNOWN_ERROR`, UUID/hex → `#`, ≤ 200
+  символов), окно `windowMs` (5 мин), для `critical` (не fatal) — отдельное короткое
+  `criticalWindowMs` (60с), `maxTrackedKeys` (500) с корзиной переполнения на каждый severity.
+  `fatal` — из исходного `context` вызова, не из смерженного `event.context`. Состояние —
+  снимок `event.context`, не ссылка на объект вызывающего. После `flushAll()` — необратимый
+  режим слива без троттлинга. Тело `report()` целиком — «последний рубеж». Вычисление имени
+  приёмника в `CompositeErrorReporter` — внутри защищённой зоны (внешний `try/catch`). Сбой
+  самого `inner.report`/`ErrorSink.send` — через общий `logDeliveryFailure`. Добавлены форматы
+  секретов: токен Telegram-бота, `Authorization: Bearer …` любого формата.
+- **Альтернативы (отклонены).** Маскировка внутри декоратора; чистый троттлинг без сводки;
+  ключ строго по `code` без `severity`/отпечатка; порт `Clock` сейчас (YAGNI); запись в `Map`
+  после `await`; неограниченный `Map` ключей; логирование сбоя доставки напрямую, без
+  `toErrorEvent`; безусловный обход ограничителя для всех критических ошибок; хранение ссылки
+  на `context` вызывающего вместо снимка; маскировка без пределов глубины/размера; раздельные
+  независимые пределы глубины для `cause` и `context` без общего бюджета — перемножаются на
+  патологическом входе; `as string` вместо гарантирующей нормализации; обрезка строки до
+  маскировки; чтение `fatal` из `event.context`; временный слив с возвратом к троттлингу после
+  `flushAll()` — не нужен, `flushAll()` вызывается один раз, на завершении процесса (YAGNI).
+- **Последствия.** Расширенный `SENSITIVE_KEY` — осознанный компромисс в пользу ложных
+  срабатываний (`seed` может встретиться в невинном поле — принято, цена пропущенного секрета
+  выше). Маскировка по формату — T-Invest, Telegram-бот, `Bearer` — расширяется по мере
+  появления новых форматов. Корзина переполнения группирует разнородные ошибки грубо.
+  `flushAll()` ждёт `inner.report` без таймаута — кандидат в седьмой вопрос ритуала
+  `[таймаут]` (урок 5). Известные, сознательно отложенные пробелы — см. открытые вопросы ниже.
 
-### Шаг 6 — конспекты и закрытие
+### Шаг 8 — конспекты и закрытие
 
 `docs/lessons/sprint-02/lesson-04a-mask-secrets.md` и
 `docs/lessons/sprint-02/lesson-04b-rate-limited-error-reporter.md`, структура — как
-`lesson-03...md`. В 4b обязательно разобрать письменно: гонку (`[гонка]`) с примером «что было
-бы, если писать в Map после await», и находку `[секрет]` про `logFailure`/`toErrorEvent` — обе
-найдены именно благодаря ритуалу, это стоит явно показать студенту как пример его пользы, а
-не абстрактно хвалить чек-лист. По одному контрольному вопросу «из шести» на новом материале
-каждого подурока (по правке `mentor.md` из шага 0).
+`lesson-03...md`. В 4b — раздел **«Четыре раунда ревью»**:
+
+| Раунд | Что нашли | Какой вопрос | Что было бы в бою, если бы не нашли |
+|---|---|---|---|
+| 1. Первое применение ритуала к готовому дизайну (до кода) | `Error`, положенный в `context` напрямую (не через `cause`), маскировался не полностью — `stack` не enumerable; сбой доставки логировался сырым `reason` | `[типы]`, `[секрет]` | Токен в `stack` чужой ошибки в `context` утёк бы в лог; токен из текста сетевого сбоя приёмника ушёл бы в консоль/Telegram в обход маскировки |
+| 2. Первый код-ревью готового наброска 4a/4b | «Посещённые навсегда» `WeakSet` путал общую ссылку с циклом; `Map` с секретным именем ключа маскировался не по ключу; список чувствительных имён был узким; критические ошибки предлагалось пропускать без предела | `[рост]`, `[секрет]` | Общая ссылка в `cause` и `context` ошибочно превращалась бы в `'[circular]'`, теряя данные; `new Map([['authorization', 'Bearer …']])` тихо пропускал бы токен; шторм разных критических ошибок заваливал бы Telegram так же, как без ограничителя |
+| 3. Второй код-ревью — по исправлениям раунда 2 | Независимые пределы глубины/размера перемножаются (до 50⁶ узлов); глубина сбрасывалась на границе `cause`↔`context`; обрезка строки была до маскировки; `fatal` читался из смерженного `context`; ключ не учитывал `severity`; после `flushAll()` окна продолжали копиться | `[рост]`, `[секрет]`, `[завершение]` | Глубокая/чередующаяся структура могла зависнуть на маскировке; урезанный токен оставался бы частично виден; `{ fatal: false }` в `context` ошибки тихо отключал бы обязательный алерт о падении процесса |
+| 4. Аудит исправлений раунда 3 | Уборка внешнего `try/catch` в композите сняла защиту с `sink.constructor.name`; `as string` соврал компилятору о типе `message` | `[исключение]`, `[типы]` | Нестандартный приёмник (`Object.create(null)`) или ошибка с нечисловым `message` превращали бы «`ErrorReporter` не бросает никогда» в ложь, ровно когда отчёт нужнее всего |
+
+**Главный вывод:** исправление — тоже новый код, и шесть вопросов задаются ему заново, а не
+только первой версии. Раунд 4 — самый показательный пример: попытка закрыть один риск (утечку
+секрета через прямой `console.error`) породила код, который сам не прошёл `[исключение]`; а
+`as string` вместо честной проверки выдало желаемое за действительное по `[типы]` — и оба раза
+цена была та же: нарушение главной гарантии модуля («не бросает никогда»), только что
+казавшейся закрытой.
+
+**Открытые вопросы:**
+- Токен Telegram-бота в URL — Sprint 03 (частично закрыт: `SECRET_PATTERNS` и `URL → href` уже
+  ловят его в тексте/адресе).
+- `flushAll()` без таймаута на сетевой `inner.report` — урок 5, кандидат в `[таймаут]`.
+- Исходная ошибка (`entry.error`) хранится в `Map` целиком до конца окна — потенциально
+  большой объект держится в памяти дольше, чем нужно для одной лишь дедупликации по ключу.
+- Геттеры `name`/`message`/`stack`, бросающие при чтении, у самого `cause` —
+  `masked.name = cause.name` не обёрнут в try/catch, в отличие от собственных полей ошибки.
+- `Date` в `context` копируется по ссылке, не клонируется — `Object.freeze` контейнера не
+  мешает вызвать `date.setTime(...)` на самом объекте.
+- `Object.keys` не видит `#private`-поля класса — общего решения для произвольных классов нет,
+  только точечные случаи (`Error`, `Date`, `Map`, `Set`, `URL`).
 
 Обновить статус 4a/4b на ✅, разбив строку 4 в `docs/sprints/sprint-02-plan.md`.
 
@@ -279,43 +544,36 @@ const OVERFLOW_KEY = '__overflow__';
 
 ## Порядок и почему
 
-0. Правки `CLAUDE.md`/`mentor.md` — процесс фиксируется до того, как по нему начинают работать
-   (✅ выполнено).
-1. `mask-secrets.ts` — независимая чистая функция, разогрев, первая таблица шести вопросов —
-   самая короткая (много «не применимо»), хороший постепенный вход в ритуал.
-2. Правка `error-event.ts` — маскировка проверяется через уже знакомый `toErrorEvent`,
-   независимо от декоратора; здесь же ритуал сразу окупается находкой про `Error` в `context`.
-3. `rate-limited-error-reporter.ts` — на готовой маскировке, отдельно гонки/рост/завершение;
-   вторая находка ритуала (`logFailure`) — здесь.
-4. `index.ts` — минимальная правка после готового класса.
-5. ADR-011 — когда все решения 4a/4b, включая находки ритуала, существуют.
-6. Конспекты + статус спринта.
-
-Каждый шаг с кодом — по процессу «Разбор»: план с таблицей шести вопросов → (раз за урок)
-предложение студенту назвать самый опасный вопрос → остановка → код → `npm run typecheck`/
-`npm test` → путеводитель → контрольный вопрос → остановка.
+1. `mask-secrets.ts` — разогрев + три формата секретов.
+2. `error-event.ts` — общий бюджет обхода, честные типы, обрезка после маскировки.
+3. `log-delivery-failure.ts` — общий хелпер.
+4. `rate-limited-error-reporter.ts` — на готовых 2 и 3.
+5. `composite-error-reporter.ts` — ретрофикс на готовом 3.
+6. `index.ts`.
+7. ADR-011.
+8. Конспекты + статус спринта.
 
 ## Проверка
 
 - `npm run typecheck`/`npm test` зелёные на каждом шаге, включая весь код уроков 1–3.
-- Критерий 4a: токен нигде не читается открытым текстом — ни в `message`, ни в `stack`, ни в
-  цепочке `cause`, ни в `context` (плоском, вложенном, в `Error`-значении); циклы не роняют
-  нормализацию.
-- Критерий 4b: шторм из N одинаковых ошибок без await между ними → 1 немедленный вызов
-  `inner` + 1 сводка с `repeatCount = N-1` и данными последнего повтора; `flushAll()` не теряет
-  накопленное; сбой `inner.report` нигде не светит секрет и не роняет ни `report()`, ни `flush()`.
-- `git status`/`git diff` — список файлов по плану, отдельно для 4a и 4b.
+- Критерий 4a: токен нигде не утекает — ни полностью, ни обрезанным по длине; патологические
+  структуры обрабатываются быстро и предсказуемо.
+- Критерий 4b: `report()` не отклоняется ни при каких данных; фатальные — всегда немедленно, по
+  исходному `context`; критические не обходят ограничитель безусловно; после `flushAll()` —
+  троттлинга больше нет; сбой доставки нигде не светит секрет.
+- `git status`/`git diff` — список файлов по плану.
 
 ## Критические файлы
 
-- `CLAUDE.md` (правка: раздел «Шесть вопросов устойчивости», выполнено ✅)
-- `.claude/output-styles/mentor.md` (правки: План / Конец урока / Ревью кода студента, выполнено ✅)
-- `docs/checklists/six-questions.md` (существует, только читаем — источник вопросов/тегов)
 - `src/shared/errors/mask-secrets.ts` (новый, 4a)
-- `src/shared/errors/error-event.ts` (правка: маскировка message/stack/cause/context, 4a)
-- `src/shared/errors/rate-limited-error-reporter.ts` (новый, 4b, с `flushAll()`)
-- `src/shared/errors/index.ts` (правка экспортов, только `RateLimitedErrorReporter`, 4b)
+- `src/shared/errors/error-event.ts` (правка, 4a)
+- `src/shared/errors/log-delivery-failure.ts` (новый, 4b)
+- `src/shared/errors/rate-limited-error-reporter.ts` (новый, 4b)
+- `src/shared/errors/composite-error-reporter.ts` (ретроактивная правка, 4b)
+- `src/shared/errors/index.ts` (правка экспортов, 4b)
 - `docs/architecture/adr/011-error-reporter-pipeline.md` (новый, 4b)
 - `docs/lessons/sprint-02/lesson-04a-mask-secrets.md` (новый)
 - `docs/lessons/sprint-02/lesson-04b-rate-limited-error-reporter.md` (новый)
 - `docs/sprints/sprint-02-plan.md` (строка 4 → 4a/4b, статусы → ✅)
+
+Не трогаем: `CLAUDE.md`, `.claude/output-styles/mentor.md` (сделано и закоммичено ранее).
