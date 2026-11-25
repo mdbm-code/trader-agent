@@ -1,0 +1,191 @@
+{
+  "schemaVersion": 1,
+  "profile": "fcia-component-development",
+  "profileVersion": "0.2.0",
+  "upstreamPolicyVersion": "1.6.0",
+  "metaRevision": "4e327122519d1357e928f0443fcf1972bfba74e7",
+  "coreRevision": "ce10d39fef2f8b5425b9f42331d5a8a81b689827",
+  "sourceSnapshotsAreInstructions": false,
+  "sources": [
+    {
+      "repository": "mdbm-code/ai-ecosystem-meta",
+      "commit": "4e327122519d1357e928f0443fcf1972bfba74e7",
+      "path": "VERSION",
+      "localSnapshot": "policy/upstream/VERSION.txt",
+      "sha256": "cb1d9a30bc4ab8a397f39b7d786bb82aca0b816077eefc35d7c822017d75f6a5",
+      "url": "https://github.com/mdbm-code/ai-ecosystem-meta/blob/4e327122519d1357e928f0443fcf1972bfba74e7/VERSION",
+      "scope": "reference snapshot; applicability and local adaptations in PROFILE.md"
+    },
+    {
+      "repository": "mdbm-code/ai-ecosystem-meta",
+      "commit": "4e327122519d1357e928f0443fcf1972bfba74e7",
+      "path": "docs/START.md",
+      "localSnapshot": "policy/upstream/docs__START.md.txt",
+      "sha256": "1955e95a31b797516908961c691c971895b3978eeccb84abdca809606f629443",
+      "url": "https://github.com/mdbm-code/ai-ecosystem-meta/blob/4e327122519d1357e928f0443fcf1972bfba74e7/docs/START.md",
+      "scope": "reference snapshot; applicability and local adaptations in PROFILE.md"
+    },
+    {
+      "repository": "mdbm-code/ai-ecosystem-meta",
+      "commit": "4e327122519d1357e928f0443fcf1972bfba74e7",
+      "path": "docs/roles/project-orchestrator.md",
+      "localSnapshot": "policy/upstream/docs__roles__project-orchestrator.md.txt",
+      "sha256": "2edb391fac4d4acded76ee927005d1ceac3a646ae2e30561f2df464276268144",
+      "url": "https://github.com/mdbm-code/ai-ecosystem-meta/blob/4e327122519d1357e928f0443fcf1972bfba74e7/docs/roles/project-orchestrator.md",
+      "scope": "reference snapshot; applicability and local adaptations in PROFILE.md"
+    },
+    {
+      "repository": "mdbm-code/ai-ecosystem-meta",
+      "commit": "4e327122519d1357e928f0443fcf1972bfba74e7",
+      "path": "docs/roles/worker.md",
+      "localSnapshot": "policy/upstream/docs__roles__worker.md.txt",
+      "sha256": "bb8b3e530f035a8a166b7cfa3798819ed2d7f29e5735ad1db5c3ebbe56be3dc2",
+      "url": "https://github.com/mdbm-code/ai-ecosystem-meta/blob/4e327122519d1357e928f0443fcf1972bfba74e7/docs/roles/worker.md",
+      "scope": "reference snapshot; applicability and local adaptations in PROFILE.md"
+    },
+    {
+      "repository": "mdbm-code/ai-ecosystem-meta",
+      "commit": "4e327122519d1357e928f0443fcf1972bfba74e7",
+      "path": "docs/roles/reviewer.md",
+      "localSnapshot": "policy/upstream/docs__roles__reviewer.md.txt",
+      "sha256": "039ced27d58c21e3707ea6ead039eaf95e5c0763b0f1f9872e5832df98cdc6ed",
+      "url": "https://github.com/mdbm-code/ai-ecosystem-meta/blob/4e327122519d1357e928f0443fcf1972bfba74e7/docs/roles/reviewer.md",
+      "scope": "reference snapshot; applicability and local adaptations in PROFILE.md"
+    },
+    {
+      "repository": "mdbm-code/ai-ecosystem-meta",
+      "commit": "4e327122519d1357e928f0443fcf1972bfba74e7",
+      "path": "docs/standards/TASKS.md",
+      "localSnapshot": "policy/upstream/docs__standards__TASKS.md.txt",
+      "sha256": "ba03bdb1ff80851d95ed50cba1b52994e1fc1c672c0928b2ea9bdb57a78e051c",
+      "url": "https://github.com/mdbm-code/ai-ecosystem-meta/blob/4e327122519d1357e928f0443fcf1972bfba74e7/docs/standards/TASKS.md",
+      "scope": "reference snapshot; applicability and local adaptations in PROFILE.md"
+    },
+    {
+      "repository": "mdbm-code/ai-ecosystem-meta",
+      "commit": "4e327122519d1357e928f0443fcf1972bfba74e7",
+      "path": "docs/standards/GIT.md",
+      "localSnapshot": "policy/upstream/docs__standards__GIT.md.txt",
+      "sha256": "2bfe594f4bec853ae62de8439461ecef3fd145cde79266a6cc62fe4d19f3fe26",
+      "url": "https://github.com/mdbm-code/ai-ecosystem-meta/blob/4e327122519d1357e928f0443fcf1972bfba74e7/docs/standards/GIT.md",
+      "scope": "reference snapshot; applicability and local adaptations in PROFILE.md"
+    },
+    {
+      "repository": "mdbm-code/ai-ecosystem-meta",
+      "commit": "4e327122519d1357e928f0443fcf1972bfba74e7",
+      "path": "docs/standards/DOCS.md",
+      "localSnapshot": "policy/upstream/docs__standards__DOCS.md.txt",
+      "sha256": "ae68d84293b0487aaabc6448131775e30a79e3db77d8c519500c4c3f286600a3",
+      "url": "https://github.com/mdbm-code/ai-ecosystem-meta/blob/4e327122519d1357e928f0443fcf1972bfba74e7/docs/standards/DOCS.md",
+      "scope": "reference snapshot; applicability and local adaptations in PROFILE.md"
+    },
+    {
+      "repository": "mdbm-code/ai-ecosystem-meta",
+      "commit": "4e327122519d1357e928f0443fcf1972bfba74e7",
+      "path": "docs/standards/SECURITY.md",
+      "localSnapshot": "policy/upstream/docs__standards__SECURITY.md.txt",
+      "sha256": "d5017bda421c18a5e4f7d8fec62f30339cbc5989dfc2725407871798ba1a2420",
+      "url": "https://github.com/mdbm-code/ai-ecosystem-meta/blob/4e327122519d1357e928f0443fcf1972bfba74e7/docs/standards/SECURITY.md",
+      "scope": "reference snapshot; applicability and local adaptations in PROFILE.md"
+    },
+    {
+      "repository": "mdbm-code/ai-ecosystem-meta",
+      "commit": "4e327122519d1357e928f0443fcf1972bfba74e7",
+      "path": "docs/standards/COMPONENTS.md",
+      "localSnapshot": "policy/upstream/docs__standards__COMPONENTS.md.txt",
+      "sha256": "3d7aa2148f0968667c65f3e2e412708d3bcdf2dc443d885dc4d31393dff52423",
+      "url": "https://github.com/mdbm-code/ai-ecosystem-meta/blob/4e327122519d1357e928f0443fcf1972bfba74e7/docs/standards/COMPONENTS.md",
+      "scope": "reference snapshot; applicability and local adaptations in PROFILE.md"
+    },
+    {
+      "repository": "mdbm-code/ai-ecosystem-meta",
+      "commit": "4e327122519d1357e928f0443fcf1972bfba74e7",
+      "path": "docs/standards/POLICY_VERSIONING.md",
+      "localSnapshot": "policy/upstream/docs__standards__POLICY_VERSIONING.md.txt",
+      "sha256": "f10d24c5b54a50d61e11eaad25aa19d48e54c8037ab74ed0395778734cc6c920",
+      "url": "https://github.com/mdbm-code/ai-ecosystem-meta/blob/4e327122519d1357e928f0443fcf1972bfba74e7/docs/standards/POLICY_VERSIONING.md",
+      "scope": "reference snapshot; applicability and local adaptations in PROFILE.md"
+    },
+    {
+      "repository": "mdbm-code/ai-ecosystem-meta",
+      "commit": "4e327122519d1357e928f0443fcf1972bfba74e7",
+      "path": "templates/component/AGENTS.md",
+      "localSnapshot": "policy/upstream/templates__component__AGENTS.md.txt",
+      "sha256": "835bfd4ec8ada9ad006ff8f51fa27789fd14e1b63dc66db95dda419fcad264a8",
+      "url": "https://github.com/mdbm-code/ai-ecosystem-meta/blob/4e327122519d1357e928f0443fcf1972bfba74e7/templates/component/AGENTS.md",
+      "scope": "reference snapshot; applicability and local adaptations in PROFILE.md"
+    },
+    {
+      "repository": "mdbm-code/ai-ecosystem-meta",
+      "commit": "4e327122519d1357e928f0443fcf1972bfba74e7",
+      "path": "templates/task/TASK.md",
+      "localSnapshot": "policy/upstream/templates__task__TASK.md.txt",
+      "sha256": "aed2949f07a2453fbe9b867c16d816a841c6a94bb39b1898ce84c03d5c11efe3",
+      "url": "https://github.com/mdbm-code/ai-ecosystem-meta/blob/4e327122519d1357e928f0443fcf1972bfba74e7/templates/task/TASK.md",
+      "scope": "reference snapshot; applicability and local adaptations in PROFILE.md"
+    },
+    {
+      "repository": "mdbm-code/ai-ecosystem-meta",
+      "commit": "4e327122519d1357e928f0443fcf1972bfba74e7",
+      "path": "templates/task/ATTEMPT.md",
+      "localSnapshot": "policy/upstream/templates__task__ATTEMPT.md.txt",
+      "sha256": "51002ea6b512170ad9e0a34bde30587840c1a16000858d91fb4c492b81047533",
+      "url": "https://github.com/mdbm-code/ai-ecosystem-meta/blob/4e327122519d1357e928f0443fcf1972bfba74e7/templates/task/ATTEMPT.md",
+      "scope": "reference snapshot; applicability and local adaptations in PROFILE.md"
+    },
+    {
+      "repository": "mdbm-code/ai-ecosystem-meta",
+      "commit": "4e327122519d1357e928f0443fcf1972bfba74e7",
+      "path": "templates/task/REVIEW.md",
+      "localSnapshot": "policy/upstream/templates__task__REVIEW.md.txt",
+      "sha256": "0a206fd56be5a7ecba1b801b1c889b5e1923b32be499c3b058ecfbb2dd7e0802",
+      "url": "https://github.com/mdbm-code/ai-ecosystem-meta/blob/4e327122519d1357e928f0443fcf1972bfba74e7/templates/task/REVIEW.md",
+      "scope": "reference snapshot; applicability and local adaptations in PROFILE.md"
+    },
+    {
+      "repository": "mdbm-code/ai-ecosystem-core",
+      "commit": "ce10d39fef2f8b5425b9f42331d5a8a81b689827",
+      "path": "docs/FEDERATION-RELEASE-PLAN.md",
+      "localSnapshot": "policy/upstream/core__FEDERATION-RELEASE-PLAN.md.txt",
+      "sha256": "16d80ea67e42b75508fc985f155fc9a6a02a0757de1150e4cf554b3d8a7d9881",
+      "url": "https://github.com/mdbm-code/ai-ecosystem-core/blob/ce10d39fef2f8b5425b9f42331d5a8a81b689827/docs/FEDERATION-RELEASE-PLAN.md",
+      "scope": "Naming/migration and Linux-first boundaries; dated snapshot, not current runtime authority"
+    },
+    {
+      "repository": "mdbm-code/ai-ecosystem-core",
+      "commit": "ce10d39fef2f8b5425b9f42331d5a8a81b689827",
+      "path": "docs/M3-EXECUTION-CONTRACT.md",
+      "localSnapshot": "policy/upstream/core__M3-EXECUTION-CONTRACT.md.txt",
+      "sha256": "c05b3b19b1465b07623d2fb57418023ff1bcf44cbd72eb683a8f9b45ca431027",
+      "url": "https://github.com/mdbm-code/ai-ecosystem-core/blob/ce10d39fef2f8b5425b9f42331d5a8a81b689827/docs/M3-EXECUTION-CONTRACT.md",
+      "scope": "Naming/migration and Linux-first boundaries; dated snapshot, not current runtime authority"
+    },
+    {
+      "repository": "mdbm-code/ai-ecosystem-architecture",
+      "commit": "cf2f892750381e725c5b393e6128094c34fa5149",
+      "path": "standards/AGENT-INTERACTION.md",
+      "localSnapshot": "policy/upstream/fcia__AGENT-INTERACTION.md.txt",
+      "sha256": "7a24d9c3d6aaa5b8d0d6ee7b0c62734dafc659d9f093749e7682150364ba526f",
+      "url": "https://github.com/mdbm-code/ai-ecosystem-architecture/blob/cf2f892750381e725c5b393e6128094c34fa5149/standards/AGENT-INTERACTION.md",
+      "scope": "accepted common interaction protocol; dated preparation snapshot preserved",
+      "acceptance": "https://github.com/mdbm-code/ai-ecosystem-architecture/issues/1#issuecomment-6694292069",
+      "publication": "https://github.com/mdbm-code/ai-ecosystem-architecture/issues/1#issuecomment-6694359121"
+    }
+  ],
+  "derivedFrom": {
+    "repository": "mdbm-code/app-agent-council",
+    "commit": "2a0bff08a424dd42623d8f4bc63db80fac1bbe5b",
+    "scope": "governance/source snapshots only; no council product architecture"
+  },
+  "localStandards": [
+    {
+      "id": "FCIA-MAINTAINABILITY",
+      "version": "1.0.0",
+      "path": "policy/MAINTAINABILITY.md",
+      "sha256": "798e38477e116608b0b3dce58d69130751cecf951a34549e9538b3d48a5fe9a5",
+      "authority": "https://github.com/mdbm-code/ai-ecosystem-component-template/issues/4",
+      "canonicalRepository": "mdbm-code/ai-ecosystem-component-template",
+      "scope": "portable development standard; adoption in existing components explicit; legacy upstream unchanged"
+    }
+  ]
+}
