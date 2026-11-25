@@ -3,3 +3,8 @@ node_modules/
 data/
 *.log
 .claude/settings.local.json
+
+# Local runtime material; portable docs remain in Git
+_local/
+.env.*
+!.env.example

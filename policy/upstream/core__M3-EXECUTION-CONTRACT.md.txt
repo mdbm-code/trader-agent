@@ -1,0 +1,367 @@
+# M3 — ordinary dev и исполнение отдельного компонента
+
+01.11.2026, Europe/Moscow. **ACCEPTED_FOR_M3-A_WITH_CONSTRAINTS**. Документальный дизайн принят Архитектором
+по fd714c0533eba4a1514653f9d0f7f8ffb994b3a0, с обязательными M3-R1…R6 ниже.
+Поручение ARCH-M3-DESIGN-20261101-01; сейчас только документы, без runtime/испытаний.
+[Конкретное следующее задание](M3-TASK.md). Основание —
+[план пилота](https://github.com/mdbm-code/ai-ecosystem-core/blob/5a3d2ed58f1d829fb2533e8873e130add524f479/docs/FEDERATION-RELEASE-PLAN.md)
+и [назначение](https://github.com/mdbm-code/ai-ecosystem-architecture/blob/3d6d6baaed0902b5e2788d1ada56f9d8eae0da82/assignments/ARCH-M3-DESIGN-20261101-01.json).
+M2 принят отдельно по K1–K5 в LAB; его closure —
+[3af240e8eb2aa575414c770617b5628433d24bb2](https://github.com/mdbm-code/ai-ecosystem-core/commit/3af240e8eb2aa575414c770617b5628433d24bb2).
+Архитектор завершил интеграцию M2: main/merge
+6ecc6cbfd811fff15cfe29981c93d22148deb840, parents=[e5f66636926a6beae38a8a254dc5f372193b6f23,
+3af240e8eb2aa575414c770617b5628433d24bb2], tree96f51b5d4e8ad380836eb451fa8a573108b3159b;
+это также независимо прочитано через GitHub API. Повторный merge запрещён.
+Данная docs-ветка остаётся от 6f55244a1f447e11ae129e3399826ef201adb0f2,
+не включает историю closure и не меняет work/m2/main.
+
+## 1. Рекомендация и подтверждённые разрывы
+
+Добавить узкий версионированный профиль `dev-execution-v1`, опирающийся на обычную
+identity/registry M2 и имеющиеся queue/discovery/mTLS/retained-release механизмы.
+Новый профиль допускает fcia-dev и один явно принятый вычислительный компонент.
+M1 dev, M2 pilot-registry-v1 и lab остаются отдельными строгими профилями.
+Не снимать их guards и не переименовывать lab-task-node в настоящий компонент.
+Универсальный gateway, новый IAM и полный provides/requires пока не нужны.
+
+Чтение выполнялось на frozen code 02f55b169e4e768289d6b314ae18961876a9cbd0
+(в base6f ровно те же 174 source/test/config, digest6d6a…):
+
+| Источник | Проверенный факт | Изменение только нового профиля |
+|---|---|---|
+| src/installed/dev-package.js | fcia-dev0.2.0, platforms=['linux'] | Измеренный новый комплект fcia-dev0.3.0 с linux/win32; native Windows gate отдельно |
+| src/installed/dev-context.js:selection/binding; src/pilot/context.js:selected/readCandidate | Единственный fcia-dev, lock/artifact в bootstrap, routing запрещён | Постоянный bootstrap anchor и проверяемый изменяемый selected/retained lock |
+| src/pilot/contract.js:verifyBootstrap/member | Оба члена M2 обязаны иметь одинаковые lock/artifact/sourceSet | Новый профиль членства закрепляет identity/ключи/принятый Core build, а не равенство lock узлов |
+| src/install/runtime.js:applyInstallation/anchor/routingFor/transitionInstallation | Повторная dev-установка не сменяет состав; managed anchor/task-state связаны с task-node.json | Новый dev anchor и adapter проверки очереди; CAS/operationId/проверка retained сохраняются |
+| src/installed/context.js; src/tasks/runtime.js:shape/withTaskTransaction/executeTask | lab-task-node, taskSchema1/2, Core summarize внутри транзакции; runtime origin проверяется через componentPath | Отдельный strict taskSchema3 и проверка Core runtime + самостоятельного handler release |
+| src/tasks/intents.js; src/discovery/{runtime,router}.js; src/transport/{runtime,router}.js | Уже есть durable intent до route, pin и подтверждённый результат, но installed binding/операция lab | Адаптер нового профиля/operation/pin; прежние wire schemas и отказы не ослаблять |
+| src/naming/runtime.js:evaluate/performCreationStage | installed-dev оставляет R/C waiting; fixture effect выполняется внутри transaction | Новый GitHub bind adapter с durable intent → внешний шаг без SQLite lock → reconcile |
+| src/naming/materialize.js:starterFiles/firstCommit | Даже dev AGENTS/STATE/JOURNAL синтетические, root commit fixture-формата | Отдельный правдивый dev starter/first-C; legacy starter побайтно сохраняется |
+| src/lab/{control,supervisor}.js | Управление процессами защищено root/run proof и lifetime lock, но preparedRoot проверяет host-lab/task-node | Переиспользовать primitives через dev controller, не обходить preparedRoot |
+| src/cross-host/acl.js | Дочерний PowerShell наследует PSModulePath | В новом Windows пути не наследовать только PSModulePath; проверить ACL, не менять глобальную среду |
+
+Это статические выводы по указанному составу, не новые эксплуатационные гарантии.
+План релиза и старые отчёты имеют исторические статусы: поздняя приёмка M2 их
+уточняет, а не меняет прошлые байты. В M3 пока ни один runtime-тест не запускался.
+
+## 2. Identity, root и выбранный состав
+
+Рекомендуются **новые устойчивые M3-root** на окончательно разрешённых машинах.
+M2 synthetic root/issuer/ключи/DB остаются сохранённым LAB-свидетельством: не менять
+им ID, не копировать секреты и не подключать их к настоящему репозиторию.
+Предварительные Linux-тесты используют искусственные проекты, Git receiver и API
+fixtures; они не получают реальный remote. Физические root создаются позже отдельным
+поручением, с согласованными постоянными каталогами и способом внешнего сохранения.
+
+До членства новый init сохраняет installer installationId и собственный ключ,
+journalId и durable discriminator `dev-execution-v1`. Повтор восстанавливает тот же
+контекст; неправильный профиль, потеря обязательного binding/подмена журнала или
+чужой непустой каталог дают отказ до эффекта. Чтение старого STATE не выдаёт роль.
+Оператор явно утверждает signed genesis/domain/issuer и два разных identity/ключа.
+Общий seed и source/ACK ведутся по проверенному порядку M2.
+
+Три слоя проверяются раздельно:
+
+| Слой | Что закреплено |
+|---|---|
+| Общий подписанный genesis области | domain/issuer/members; правила и contract/profile revision; разрешённые Core sourceSet/provenance и wire versions. Не достаточно одинакового domainId в JSON |
+| Индивидуальный bootstrap/binding | installationId/publicKey/keyId/journalId, исходный anchor, доказанный Core build/sourceSet и profile; закрытый ключ только на своём узле |
+| Изменяемая selection | Собственный environment lock, revision/operation receipt, выбранный/retained release и точный component execution pin |
+
+В новом профиле genesis members фиксируют installationId/publicKey/keyId; отдельное
+bootstrap proof фиксирует стартовый Core build/sourceSet/anchor и поддержанный профиль.
+LockId не служит ID члена. Разные platform/NodeVersion уже входят в lock.environment,
+поэтому Linux и Windows могут иметь разные lockId при тех же component artifact bytes.
+M2 verifyBootstrap с требованием равенства lock сохраняется без fallback.
+
+Контекст M3 разрешает только fcia-dev0.3.0 и утверждённый svc-file-summary; Core artifact
+фиксирован принятой code/provenance точкой. Это не загрузчик произвольного npm-пакета.
+При добавлении компонента installer проверяет штатные manifest/semver/cache/environment,
+а также принятую project/release/operation binding. Переход имеет operationId,
+inputDigest, baseLockId, expectedRevision и durable receipt. Anchor/installationId,
+identity/registry/journalId и task IDs при смене selected не меняются. Старые lock и
+артефакты сохраняются для уже принятых задач; новых принимает только selected.
+Откат — отдельный авторизованный CAS-переход, не переписывание pin/очереди/результатов.
+Для первого M3 допустим только переход с тем же Core build; обновление самого Core
+на другой sourceSet требует последующего отдельного migration-контракта.
+
+## 3. Первый настоящий тестовый компонент
+
+Предложение: **kind=service, component_id=svc-file-summary**, repo
+`mdbm-code/svc-file-summary` (имя пока не зарезервировано; Naming проверяет доступную
+область перед действием). Это вычислительная возможность для других компонентов,
+не connector к внешней системе. Node ESM, без npm-зависимостей и собственной службы.
+Небольшой worker Core запускает только эту явно принятую операцию из её installed
+release; Core не содержит работающую копию обработчика вместо отдельного компонента.
+
+Операция `file-summary/v1` повторяет проверенную семантику src/tasks/summary.js:
+вход schema1/files, от1 до32 записей {path,content}; ASCII portable path — метка,
+не путь для чтения диска; casefold-уникальность, well-formed строки, UTF8 суммарно
+до256KiB. Выход schema1/fileCount/totalBytes/files с path/bytes/lines/sha256,
+ASCII-сортировка, прежнее правило LF. Никаких файловых/сетевых записей или чтения
+произвольных путей. Контракт и реальные модуль/проверяющий принадлежат компоненту:
+`src/summary.js`, `src/verify.js`, `pilot-operation.json`, README/тесты/паспорт.
+Рекомендуемый первый выпуск0.1.0, platforms linux/win32, x64/arm64, Node24
+в прежнем диапазоне; обещание платформ подтверждается отдельными прогонами.
+
+Полный федеративный provides/requires и runtime Python не вводятся. Узкий
+`pilot-operation.json` schema1 содержит profile, projectId/component_id, operation,
+contractDigest, runtime=node, относительные handler/verifier paths и их source hashes.
+Имена/пути имеют строгий allowlist, без hooks, URL-модулей и динамических зависимостей.
+Внешняя доверенная release approval связывает projectId, stable GitHub repositoryId,
+source commit/tree, версию, artifactDigest, operation/contractDigest и exact files.
+Она не самоссылка: полный digest артефакта хранится вне его собственных байтов.
+Issuer/operator принимает release по конкретному source SHA; отдельные установки
+получают тот же подписанный approval. Одного checksum от неизвестного отправителя
+недостаточно. Git-каталог M2 не становится каналом исполнения произвольного кода.
+
+Артефакт собирается проверяемо из отдельного component commit D, потом инспектируется
+штатным installer. Первая Naming C-точка может содержать только рабочий starter;
+D — последующий проверенный коммит реализации, с C в истории. Не выдавать starter C
+за работающий выпуск. Build manifest связывает каждый файл с D/tree/sha256; LF/режимы
+зафиксированы, нет нативных модулей, install scripts или запуска из checkout.
+Измерить Core и component packages до установки: предел каждого штатного артефакта
+128 файлов/32MiB сохраняется. Если closure не помещается, остановка/измеренный diff,
+а не автоматическое поднятие лимита. Node/Git уже подготовлены отдельно; Core не
+устанавливает runtime и не использует отдельно оплачиваемый модельный API.
+
+## 4. Полный Naming L/R/C: минимальный реальный адаптер
+
+Остаются принятые kind/prefix/passport/registration правила и локальные резервы,
+отказы, CAS-ревизии/план/requestId/operationId. Новый adapter — только `github-bind-v1`,
+без create/delete/rename/fork и без правок чужой истории.
+
+1. **До каталога/репозитория/первого commit**: определить kind/name, сравнить все
+   проекции и доступные реестры/репозитории. Неизвестная внешняя область — incomplete,
+   не утверждение уникальности. В offline разрешается местное L с явным R/C waiting.
+2. На уже постоянном M3-node регистратор штатно выдаёт projectId и сохраняет approval,
+   requestId/plan/revision/reservation. Это реальный ID проекта, не имя машины.
+   После этого он не заменяется при установке компонента на другом узле.
+3. L создаёт только собственный правдивый starter с creation marker/nonce. Новый
+   starter показывает projectId/источник решения и назначения (или честно «не назначен»),
+   границы роли, задачи и INTENT/RESULT/UNKNOWN, provenance и точку продолжения.
+   AGENTS основной, CLAUDE указатель; Codex/Claude/Kimi используют один порядок.
+   Никаких придуманного runtime role ID, автоматического P000 или синтетического
+   «официальных назначений нет», если назначение действительно подтверждено.
+4. Владелец отдельно разрешает создание конкретного repo и сам создаёт **пустой**
+   GitHub repo, без README/license/.gitignore. Первый ответ создания и план Core явно сообщают kind, префикс,
+   component_id, рекомендуемое имя и ожидаемый URL. Установщик/агент repo не создаёт.
+5. **R** читает через GitHub API точный repositoryId/node_id/full_name/owner/clone_url,
+   проверяет case/canonical URL, право доступа, не-fork/non-archived и отсутствие refs.
+   Approval связывает owner/name/url/**repositoryId**/projectId/requestId/revision,
+   operationId и expectedEmptyMain=true. Повтор не следует redirect/переименованию
+   или новому repo с тем же URL. Без metadata/auth/полного просмотра refs — waiting
+   либо blocked, не «не существует». R фиксирует проверенную разрешённую привязку,
+   но **не эксклюзивный remote claim**: `R_VERIFIED_PENDING_C`. До C нет полного
+   materialized/external-owner-success. Другая установка может одновременно видеть
+   пустой repo; конкурентную эксклюзивность обеспечивает следующий remote шаг.
+6. **C** сначала сохраняет точные bytes/tree/author/committer/time/root commit SHA и
+   привязку к прежнему operationId, затем только этот commit. Это M3 root commit
+   без родителей, с projectId/nonce/plan/assignmentRefs в файлах, без приватных путей.
+   Стандартный Git push отправляет ровно `C:refs/heads/main`, без force/плюса/ref deletion,
+   без pull/rebase/merge/hooks/auto signing. Чужой root/README не становится базой.
+   У root C нет предков: ненулевой чужой main не может быть его fast-forward базой.
+   Если два projectId оспаривают один repo, их разные C не могут оба занять main.
+   Проверить это реальными параллельными Git receiver процессами, не одним mock.
+7. После push независимо перечитать тот же repositoryId, exact main=C и commit/tree/
+   все файлы/отсутствие неожиданных refs. Только тогда C=verified и R=bound.
+   Потеря ответа — UNKNOWN; read-only reconcile прежних ID и C прежде повтора.
+   Чужой main/refs/изменённый repo/approval — conflict/blocked, без автоматического
+   исправления. Свой C при потерянной локальной квитанции восстанавливается по
+   сохранённому intent и полному proof, а не по похожему README. Повторный push того
+   же C допустим только после определённой сверки отсутствия main, действующего
+   approval и прежнего repo ID; новый ID не обход UNKNOWN.
+
+Это вывод для предлагаемого adapter на основе [Git push rules](https://git-scm.com/docs/git-push#_push_rules),
+не уже проверенная гарантия M3. GitHub REST create-ref не используется для bootstrap
+пустого repo: [официальный API](https://docs.github.com/en/rest/git/refs#create-a-reference)
+не поддерживает этот случай. Постоянный repositoryId сверяется через
+[Get a repository](https://docs.github.com/en/rest/repos/repos#get-a-repository).
+Имя/URL сами не защищают от удаления и повторного создания repo между двумя
+проверками. Обязательное условие R/C — credential, ограниченный **stable repositoryId**
+(owner-issued fine-grained PAT для выбранного repo или scoped installation token),
+а не доступ на все репозитории. Approval содержит этот ID, provider не следует
+redirect. Тогда пересозданный repo с тем же URL не получает право записи этого
+credential; смена ID при readback всё равно даёт UNKNOWN/conflict. Конкурирующие
+административные rename/transfer/delete запрещены на короткое окно binding по
+согласованному порядку владельца; local lock не заявляется защитой от администратора.
+[Границы fine-grained tokens](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#fine-grained-personal-access-tokens),
+[repository_ids installation token](https://docs.github.com/en/rest/apps/apps#create-an-installation-access-token-for-an-app).
+
+Запреты/rulesets GitHub не обходятся: если root push запрещён, блокируется C и
+показывается причина; owner-authored README молча не принимается.
+
+Adapter использует Node builtins HTTPS и Git CLI. Для metadata и push нужен заранее
+разрешённый credential provider владельца, ограниченный данным repo; desktop
+GitHub-коннектор не выдаётся за авторизацию установленного Core. Узкий provider
+передаёт секрет только в память controller/ограниченный Git askpass IPC/stdio;
+не в argv, план, журнал, Git config, вывод, component worker или GitHub. Не менять
+существующую авторизацию автоматически. Отсутствие provider — отдельный blocking
+prerequisite будущего R/C, не причина перестройки механизма имён.
+
+## 5. Транзакции, права и неизвестный внешний результат
+
+M3 хранит task tables в **том же local/runtime.sqlite**, что node journal/registry/
+Naming/security. Не создавать третью task DB и не использовать lab task-runtime.sqlite.
+Порядок коротких блокировок всегда **S=installer state → J=node journal (включая tasks)**.
+Если legacy путь использует T=task DB, остаётся прежний S→T; смешанного J→S/T нет.
+Profile adapters передают уже открытый проверенный контекст: не вызывать openNode
+повторно из J и не входить в holdVerifiedInstallation из task callback. Control lifetime
+DB — отдельное владение процессом, не транзакция installer/journal.
+
+Для R/C, загрузки/публикации, discovery/HTTP/Git network:
+
+- S→J: проверить profile/identity/selected/registry/approval/rights/revision; записать
+  immutable INTENT/inputDigest/operationId/candidate bytes и expected external state.
+- Закрыть J и S. Лишь затем внешний I/O с deadline/size bound и точным ресурсом.
+  Bounded subprocess-Git тоже не держать в долгой SQLite транзакции.
+- Сначала read-only reconcile внешнего эффекта; затем S→J, заново проверить права,
+  approval/grant/plan/current revision и подтвердить receipt CAS.
+- Если в промежутке пришёл revoke, факт effect observed сохранить отдельно, но не
+  объявлять результат принятой операцией и не повторять/откатывать автоматически.
+  Локальный revoke ждёт короткий J, а не сеть. Уже отправленный Git push отозвать
+  атомарно нельзя; предел явный. Внешние правила доступа не заменяются local lock.
+
+Для вычисления аналогично: S→J durable claim(task/requestDigest/pin/attemptId/runId),
+освобождение обоих locks, запуск собственного bounded child из pinned release,
+потом S→J повторные проверки и единственный commit результата. Поздний worker result
+имеет старый attempt token и не проходит CAS. При crash до commit чистую функцию
+можно вычислить снова: **один подтверждённый результат, не exactly-once CPU запуск**.
+Worker получает минимальное явное окружение без GitHub/SSH/issuer secret,
+NODE_OPTIONS/preload/custom loader; Node берётся из проверенной prerequisite среды.
+Это запуск доверенного проверенного кода, не sandbox для враждебных компонентов.
+Запрет внешних эффектов обоснован аудитом этой одной операции, а не доступом ко
+всем JS возможностям. Нельзя переносить гарантию на внешние записи в 1С. Истёкшая lease/нет связи сами
+не передают исключительные полномочия/право внешнего изменения.
+
+При смене selected атомарная граница относительно приёма — S; в том же порядке J
+проверяется целостность очереди/retained pins. Удалять pinned release нельзя;
+GC не входит в M3. File staging outside DB имеет durable intent/owner markers и
+полный digest до публикации; crash recovery не усыновляет чужой partial.
+
+## 6. Контракт исполнения, совместимость и восстановление
+
+В новом профиле добавляется protocol2/taskSchema3; схемы1/2 не расширять permissive
+проверками. Envelope сохраняет domain/requester/recipient/taskId/agreementId/grant/
+подпись/inputDigest/executeBefore. Operation: `{projectId,component_id,name,contractDigest}`.
+Pin: `{lockId,component,projectId,version,artifactDigest,sourceCommit,contractDigest}`.
+Handler/verifier bytes и пути сверяются с pinned artifact; runtime Core — со своим
+проверенным fcia-dev release. Идентичность конкретного процесса не заменяет projectId
+или подпись grant. Подмена module в checkout не меняет запущенный installed code.
+
+Совместимость: новый feature `task.component-operation.v1` и отдельная ветвь strict
+validators; M1/M2/lab не рекламируют её. Источник реальных прав — прежний issuer:
+requester `task.submit` к конкретному executor, executor `task.execute` к requester,
+ресурс=domain. В новом профиле narrow signed operation approval с domain/двумя peer/
+projectId/operation/contractDigest/approved release/expiry связывается с agreementId.
+Это дополнение проверки данной операции, не новый IAM. Права publish.source/ack.source
+остаются отдельными; регистрации/пакетного hash/членства недостаточно для выполнения.
+Проверять обе grants, operation approval, observed revision/revoke, expiry и clock
+highwater при submit/bind/accept/claim/result delivery/ACK; реальный локальный clock,
+не fixture now=1000. После наблюдённого revoke прежние credentials не восстанавливают
+прав. Офлайн-узел не узнаёт ещё не доставленный revoke: действует ограниченный срок
+grant (как M2, ≤24h); это известная распределённая граница, не немедленный global revoke.
+
+Queue сохраняет поручение **до** выбора версии/маршрута: immutable taskId/inputDigest,
+operation/contract, явный recipient и version range. Вне связи waiting_route, не ошибка
+потери задания. Проверенный discovery закрепляет exact execution pin + request + bound
+одной J-транзакцией. После bind retry не выбирает новый release/узел. Старый pin
+обслуживает результат/повтор уже принятой задачи; новые задачи — только selected.
+Одинаковый taskId с другим input/peer/operation даёт conflict. Импорт каталога не
+является discovery, доступностью executor или разрешением вызова.
+
+Результат подтверждается подписью, requestDigest/pin/outputDigest и независимым
+verifier из принятого component artifact на requester. Оба узла устанавливают один
+portable artifact; их lockId различаются. Прежний результат/ACK повторяется без
+нового committed execution. Потеря request reply/result reply/ACK, SIGKILL после
+result commit и перезапуск восстанавливаются по прежнему taskId/operationId/receipt.
+Revoke блокирует дальнейшие передачи, сохраняя локальный результат для read-only.
+
+Те же contract/artifact/input bytes работают на Linux и native Windows. Это не
+автоматическая миграция очереди между installationId: подписанный recipient/pin
+не меняется. Для другого executor — новое явно порученное задание, не скрытый retry.
+Перенос/восстановление самой установки требует вывода прежнего писателя и отдельного
+разрешения; M3 не копирует ключи/журналы на второй активный хост.
+
+## 7. Процессы, платформы и доказательства
+
+CLI будущего установленного Core: `fcia start ROOT`, `fcia status ROOT`, `fcia stop ROOT`;
+init/status без запущенного manager сохраняются. Controller поддерживает один runId,
+root-bound proof/lifetime lock/IPC parent guard/TTL; start повторяется без второго
+manager, stop завершает только детей своей сессии. Не kill по номеру порта/имени/PID
+без proof. Неизвестный/чужой процесс — unreachable/blocked, без зачистки. Worker,
+gateway, tunnel и flush принадлежат этому run; stderr очищен, сырой журнал вне Git.
+
+Транспорт: переиспользовать loopback mTLS entry и явный peer enrollment, signed
+messages/discovery. Для физической пары предпочтителен ранее проверенный способ
+SSH forwarding поверх разрешённого VPN с локальными endpoint; необходимость и
+параметры SSH подтверждает отдельный deploy-gate. Нельзя считать наличие Amnezia
+разрешением на route/firewall/порт. Прямой bind0.0.0.0/смена сертификатов и публичный
+доступ в этот проект не включены. Нет системного автозапуска/службы/обновления VPN.
+
+Windows10 native: PowerShell owner commands, Node24/Git заранее проверены, пути с
+пробелами/кириллицей, casefold/зарезервированные имена, exclusive rename и открытые
+SQLite/WAL handles. Private ACL проверяет реальный SID/наследование/файлы identity,
+а не Unix mode на Windows; менять ACL только новых owned root. PowerShell5.1 дочерний
+процесс не наследует PSModulePath, остальные нужные переменные сохраняются; глобальные
+модули и окружение не чинятся. Известный WindowsServer2019 диагноз не означает,
+что Windows10 уже испытана, и не даёт права менять MSTS.
+
+Доказательства разделены: (A) новые искусственные Linux-стенды; (C) первый пилот на двух отдельных Linux-узлах; (B) следующий обязательный native Windows10 owner smoke/recovery. Порядок C перед B принят владельцем6564170437; все Windows-инварианты выше сохраняются. C требует настоящего компонента и GitHub L/R/C/D, двустороннего каталога/ACK, работы, обновления/перезапуска и fresh GitHub recovery. Кандидаты remote-dev-system/vds02 ещё не имеют physical readiness/точного допуска. После заморозки — полный
+регресс/lint/exact manifest, независимое review и получение опубликованного комплекта
+новым назначенным агентом без исходной копии. Только после C можно заявлять полный
+пилот. Публичный checkpoint сохраняет безопасное состояние/UNKNOWN и provenance,
+не приватные ключи или рабочую БД; не обещает оживление identity после потери секрета.
+
+## 8. Использовать / адаптировать / создать и оставшиеся допуски
+
+| Решение | Основание |
+|---|---|
+| Использовать installer manifest/semver/cache/inspectArtifact, durable queue/intents, Git source/ACK, подписи/grants, mTLS/loopback | Уже проверены в своих профилях; не переписывать ядро |
+| Адаптировать новый dev context/managed anchor, taskSchema3/pin/operation, discovery/transport context и process controller | Фактические lab/M2 guards не позволяют ordinary cross-platform execution |
+| Создать узкие execution-profile/operation/release validators, реальный github-bind adapter и правдивый dev starter | Готового механизма в проверенном срезе для этих задач не найдено; fixture не засчитывается |
+| Использовать Node/Git builtins; без новых npm/skills/plugins/MCP | Нужны файловые/Git/SQLite/HTTPS операции; desktop GitHub tool годится для публикации, но не установленного worker |
+
+После ревью нужны отдельные поручения кода и физического допуска; это не вопросы,
+блокирующие нынешнюю документацию. Архитектор принимает предложенный profile/contract/
+allowlist. Владелец принимает кандидата kind/name и создание конкретного пустого repo,
+проектное руководство/право первого C. Чат подготовки предоставляет фактические
+ОС/hostname/доступ VPN-сервера и разрешённые SSH/resource/port bounds; Windows10
+оператор — владелец, готовность ещё не подтверждена. Способ защищённой подачи
+repo-limited credential определяется перед R/C, без передачи секрета через чат.
+Не предрешать, что ранее выданный root-доступ к другому серверу покрывает эти действия.
+UI/Dev1C/OneCD/Python/MCP, production, legacy миграция и перенос оргполитики вне M3.
+
+## Действующее поручение реализации и обязательные уточнения
+
+Принятый исторический дизайн сохранён по fd714c0533eba4a1514653f9d0f7f8ffb994b3a0.
+Настоящая рабочая редакция относится к M3-A от main6ecc6cbfd811fff15cfe29981c93d22148deb840,
+work/m3-dev-execution. [Приёмка](evidence/m3-design-acceptance.json),
+[точное поручение/allowlist](evidence/m3-a-assignment.json), [INTENT](M3-IMPLEMENTATION.md).
+После подтверждённой публикации INTENT отдельное общее разрешение не нужно.
+Native Windows/real GitHub/physical gates остаются NOT RUN/NOT AUTHORIZED.
+
+### M3-R1-GIT-BOUNDARY
+
+Use a private owned Git context and a minimal child environment for real R/C. Do not inherit URL rewrites, extra headers, hooks, credential helpers, GIT_CONFIG_*, alternate objects, SSH/proxy/transport overrides or trace settings from arbitrary user/repository configuration. Restrict production destinations to the approved canonical GitHub HTTPS repository. Check spawn errors as well as exit status. Fixture transports are explicitly injected only for artificial tests. No changes to global Git configuration.
+
+### M3-R2-CREDENTIAL-PROOF
+
+Define the credential-provider prerequisite: stable repositoryId, scope evidence/owner attestation, expiry and authorized use. A successful metadata GET alone does not prove repository-limited write scope. Missing or broad/unknown scope stays blocked before push. No actual credential is required for M3-A; fixtures must cover unknown scope and repository replacement. Do not mint or expand tokens automatically.
+
+### M3-R3-REMOTE-ATOMICITY
+
+The root non-forced push arbitrates refs/heads/main only; it is not an atomic assertion that every remote ref remains absent. State this limitation. Under the owner-declared no-admin-change binding window, check all required refs before and after. A concurrent unrelated ref or repository identity change after an observed effect yields conflict/UNKNOWN without claiming successful binding, force cleanup or deletion. Preserve observed facts after revocation.
+
+### M3-R4-INSTALLED-CLOSURE
+
+Measure the entire offline Core closure, including subprocess/dynamically reached worker/controller/issuer/checkpoint entries; the current source-set regex alone does not discover all such entries. Keep 128-file/32MiB artifact limits and dependencies unchanged. Demonstrate execution, verification and recovery from installed bytes with checkout unavailable or tampered; pin the separate component artifact rather than a Core copy.
+
+### M3-R5-WINDOWS-BOUNDARY
+
+Prepare portable paths and profile-specific ACL checks against the actual new identity/private file layout; do not rely on legacy node/identity path. Scope PSModulePath removal to the child PowerShell path. Native Windows behavior remains NOT RUN until the owner's actual Windows10 execution. Do not silently change live ACLs, environment, or old roots.
+
+### M3-R6-REVIEW-BOUNDARY
+
+Carry all constraints into the new accepted contract/INTENT before code. Preserve historical design and M2 receipts unchanged; update stale present-tense M2 integration wording only in the new working documents. Publish meaningful phase checkpoints and exact next action; never recover current work from the historical M1 stop text. No fresh runtime authority or physical permission is created by these documents.
+

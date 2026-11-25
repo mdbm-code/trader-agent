@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "appointments": [
+    {
+      "id": "TRADER-DOCS-20261125",
+      "role": "architect-implementer",
+      "holder": "Codex /root, current owner-assigned session",
+      "authority": "Direct owner request 2026-11-25: apply documentation version used by svc-comfyui; APS deferred",
+      "task": "T001",
+      "scope": "documentation only; no runtime, broker, dependency install, commit/push",
+      "status": "documentary_work_complete_review_accepted_owner_acceptance_and_publication_pending"
+    },
+    {
+      "id": "TRADER-T001-R01",
+      "role": "independent-reviewer",
+      "holder": "Codex /root/trader_docs_review",
+      "task": "T001/R01",
+      "authority": "Scoped assignment by T001 coordinator under WORKFLOW independent-review requirement",
+      "scope": "static documentation review; own R01 only",
+      "status": "completed_ACCEPT_SCOPED_STOP",
+      "report": "docs/tasks/T001/R01.md",
+      "candidateManifestSha256": "58c3d7408fa593ad8055144da5251569253a1ed4d74d8336ea3929ec1ddf54b1"
+    }
+  ],
+  "writer": null,
+  "note": "Review has its own R01; general files have one author. Commit/push remains with owner."
+}

@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "status": "PREPARATION_NOT_REGISTERED",
+  "localLabel": "trader-agent",
+  "displayName": "Помощник исследования рынка ценных бумаг",
+  "targetEcosystem": "FCIA",
+  "intendedKind": "app",
+  "kindDecisionStatus": "PROPOSED_FOR_T002",
+  "projectId": null,
+  "componentId": null,
+  "installationId": null,
+  "registrationStatus": "NOT_REGISTERED",
+  "workingRepository": "mdbm-code/trader-agent",
+  "officialComponentRepository": null,
+  "starterVersion": "0.2.0",
+  "profileVersion": "0.2.0",
+  "productImplemented": false,
+  "existingCode": "TypeScript scaffold and sandbox smoke script",
+  "runtime": {
+    "status": "NOT_DEPLOYED",
+    "oldInstallation": "UNKNOWN",
+    "requiredNodeMajor": 24
+  },
+  "componentDocumentation": {
+    "profile": "trader-agent-remote-development",
+    "version": "0.1.0",
+    "entrypoint": "docs/START.md",
+    "aps": "NOT_ADOPTED"
+  },
+  "starterSource": {
+    "repository": "mdbm-code/ai-ecosystem-component-template",
+    "commit": "bccefddef1757728611b1fb101a8c857cd60fb34"
+  },
+  "nextTask": "T002"
+}

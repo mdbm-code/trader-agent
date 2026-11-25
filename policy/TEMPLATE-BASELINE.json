@@ -1,0 +1,239 @@
+{
+  "schemaVersion": 1,
+  "profileVersion": "0.2.0",
+  "source": {
+    "repository": "mdbm-code/ai-ecosystem-component-template",
+    "commit": "bccefddef1757728611b1fb101a8c857cd60fb34"
+  },
+  "referenceComponent": {
+    "repository": "mdbm-code/svc-comfyui",
+    "commit": "1566567d052b33cfaf24a6e0decea29172d33d4d"
+  },
+  "baseProjectCommit": "081fef59927209c0baba201e3ea2dd584d3673f6",
+  "selection": "compatible-documentation-adaptation",
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "sourceBlobOid": "06a7784132e3b5fb09fb5c80e1c36ed4c8835a2f",
+      "sourceSha256": "3fa6520bf24eab4927d79f9f9675e0b7e80590b859e792664094b8b232b82c94"
+    },
+    {
+      "path": "LICENSE-NOTICE.md",
+      "sourceBlobOid": "231224ad09a731f8b3b5b69b2edcf4211da74c1a",
+      "sourceSha256": "9261a9dd14e4a614bf52387354d14dcfaf04e7c4000a08ac5224716609b16318"
+    },
+    {
+      "path": "docs/WORKFLOW.md",
+      "sourceBlobOid": "315c7531e295f2619ded081b06582daf966b0480",
+      "sourceSha256": "cf57613a1d5644191d50c89dc5c97bda1410b3ac586ab382e812aa4d1e9b2f76"
+    },
+    {
+      "path": "docs/CHECKPOINT.md",
+      "sourceBlobOid": "2c234052ee096864414a2943634a9234a93aef31",
+      "sourceSha256": "7eda24bc1b6875c892eb4c90bee82c037c887269dbe9990345fa699cc380497b"
+    },
+    {
+      "path": "docs/INTERACTION.md",
+      "sourceBlobOid": "f2d9ea016a722ceb38147b85372147afed2a98b7",
+      "sourceSha256": "ef4e345848335cfc9354d5a338b1de88e4cce9777e5768cb5d1fc11935aeef86"
+    },
+    {
+      "path": "docs/PORTFOLIO.md",
+      "sourceBlobOid": "847dc3fc7b036dc2ba745f811991a9f4cf7e4a09",
+      "sourceSha256": "bbcaf371030b5810e6b487212ffad84bb2d81425fcc357b7b33b2343f2e582d1"
+    },
+    {
+      "path": "docs/roles/README.md",
+      "sourceBlobOid": "a9e06441c1262be302bca38dbf34f36aed369e01",
+      "sourceSha256": "89eb2aa8fed176e67fa107cb2765e87fe26ba8448cb0725a3b6b2b2135b9e6d5"
+    },
+    {
+      "path": "docs/roles/ARCHITECT.md",
+      "sourceBlobOid": "12fbe83b8f764fa1e7d9827f1d1abbe1d60a03c3",
+      "sourceSha256": "1ae10e0c69defd8d0969d78657c44b70e7ec7ed7280ea49dff04f4e2970564a0"
+    },
+    {
+      "path": "docs/roles/WORKER.md",
+      "sourceBlobOid": "6b31c54037bd2ef6e0138401dcf30b00fdae2fda",
+      "sourceSha256": "391cf4f8c5bd40660e781f4ba8b0d9604f91a95c4398995d8c6c291a68edf753"
+    },
+    {
+      "path": "docs/roles/REVIEWER.md",
+      "sourceBlobOid": "81550f8551f780fa01fe8661d9cb25e145f2f95d",
+      "sourceSha256": "01d89e8452fae87eed34b3d741037a725ff9094f277b50c6f837a2d2a54c78c9"
+    },
+    {
+      "path": "docs/tasks/README.md",
+      "sourceBlobOid": "15d37012d7e5fa3f2fe0b0932249ca48b782eb16",
+      "sourceSha256": "2b673f7e72c03f19abde0d669159bf4f2f9245607a33be6a6ffe36533b6ac1e1"
+    },
+    {
+      "path": "templates/README.md",
+      "sourceBlobOid": "1ef38ec909be6b8c9c621e1477f176f38db51e3a",
+      "sourceSha256": "a036b80a4132677f454e0b1900fcacd724fcd10bc27ad937b330244e9a703a2e"
+    },
+    {
+      "path": "templates/ADR.md",
+      "sourceBlobOid": "27f524b07f077fa4722b87875a3543f085e978ff",
+      "sourceSha256": "69cccd7a546a37023c0b0750159f67c7388edf43380334c33d7dfb2e8daddb22"
+    },
+    {
+      "path": "templates/TASK.md",
+      "sourceBlobOid": "2894e075905e706250cb5979a3f1d8325dd32351",
+      "sourceSha256": "8a619aa57c6d398cd8961a1aaacede3c5d15c4b2ebb4ba3728c56cdd0717e3f9"
+    },
+    {
+      "path": "templates/ATTEMPT.md",
+      "sourceBlobOid": "d2f885003aada3b4e954dd6f3581faeacdbf7556",
+      "sourceSha256": "52a1a54f2289d8acc81c93c489009d8cae6aae75d39a193313f28bc981e1cd7e"
+    },
+    {
+      "path": "templates/REVIEW.md",
+      "sourceBlobOid": "826ed4e2d448bb6a5eb429e52c56e80581569067",
+      "sourceSha256": "1535f722ebe26ed2a1cdc8b88276fd03a805f8bb4a3dfb100eb6a7cc59ea3198"
+    },
+    {
+      "path": "templates/CHECKPOINT.md",
+      "sourceBlobOid": "993f5d79321af9d7ff1b48247ba47b9f3335ea7d",
+      "sourceSha256": "4f726a808d2a74558a48915de9633118b8224cfd2b2f29a9c5e3c89895005aa8"
+    },
+    {
+      "path": "templates/CODE-STRUCTURE.md",
+      "sourceBlobOid": "83858395a79cf2f72773e2b504e5230cc727153a",
+      "sourceSha256": "8ada214db2ed5811c68ee993c58d5c541a67a93411b64df51502aae88f20df72"
+    },
+    {
+      "path": "policy/CHANGELOG.md",
+      "sourceBlobOid": "c03d3b4b9c3e64fd66eeb32ff890c2d13b22edbe",
+      "sourceSha256": "81fa3116b106fab3bac592fe172182b7a0bd9fe377cedb3a75ee949adda11f73"
+    },
+    {
+      "path": "policy/LOCK.json",
+      "sourceBlobOid": "5c41d6112abedd229b9ca5d14abd194c97f84175",
+      "sourceSha256": "39f503fa64b9a7692a5bab3ac2130544a237ae290fe58404ec818e86dc760877"
+    },
+    {
+      "path": "policy/MAINTAINABILITY.md",
+      "sourceBlobOid": "9ed0aceccc9e24493234843877a564d3a91f2e76",
+      "sourceSha256": "798e38477e116608b0b3dce58d69130751cecf951a34549e9538b3d48a5fe9a5"
+    },
+    {
+      "path": "policy/PROFILE.md",
+      "sourceBlobOid": "443483750d6e5e9c54563f124ebc4094fc694272",
+      "sourceSha256": "e8824fca52dd03d9f97d1b07e02f864d86e0544b4c949bc0e90cfcc25fbd291b"
+    },
+    {
+      "path": "policy/README.md",
+      "sourceBlobOid": "726a0dfa32e3832e975bf7ef1ff35a738b42fd9f",
+      "sourceSha256": "9f11a7f817bf60082f5a44e3c52dd6b8d348dc9212ceddc02f0ce5a7b7bc0f65"
+    },
+    {
+      "path": "policy/upstream/README.md",
+      "sourceBlobOid": "08861dfa2dcb5a852b10990d485fc088d134abf9",
+      "sourceSha256": "34627b62d0040d8701fca3274b3b9b36718157129fe42b0517d401265f8d4fe6"
+    },
+    {
+      "path": "policy/upstream/VERSION.txt",
+      "sourceBlobOid": "dc1e644a1014338ad0ca67b5c0bfbd2402e761ee",
+      "sourceSha256": "cb1d9a30bc4ab8a397f39b7d786bb82aca0b816077eefc35d7c822017d75f6a5"
+    },
+    {
+      "path": "policy/upstream/core__FEDERATION-RELEASE-PLAN.md.txt",
+      "sourceBlobOid": "2b28b5526b5c6b2b5c7393ba5e21783fa97d9b9a",
+      "sourceSha256": "16d80ea67e42b75508fc985f155fc9a6a02a0757de1150e4cf554b3d8a7d9881"
+    },
+    {
+      "path": "policy/upstream/core__M3-EXECUTION-CONTRACT.md.txt",
+      "sourceBlobOid": "bf529b2334273a035a10079b612efddd77a2c242",
+      "sourceSha256": "c05b3b19b1465b07623d2fb57418023ff1bcf44cbd72eb683a8f9b45ca431027"
+    },
+    {
+      "path": "policy/upstream/docs__START.md.txt",
+      "sourceBlobOid": "241e4bed4346be79b53eee4abe4f5f441a4e6581",
+      "sourceSha256": "1955e95a31b797516908961c691c971895b3978eeccb84abdca809606f629443"
+    },
+    {
+      "path": "policy/upstream/docs__roles__project-orchestrator.md.txt",
+      "sourceBlobOid": "34321dcad4e1dc53008193f75c844e78ff14e09e",
+      "sourceSha256": "2edb391fac4d4acded76ee927005d1ceac3a646ae2e30561f2df464276268144"
+    },
+    {
+      "path": "policy/upstream/docs__roles__reviewer.md.txt",
+      "sourceBlobOid": "aee9622825735d085306284284fd783b9315d77d",
+      "sourceSha256": "039ced27d58c21e3707ea6ead039eaf95e5c0763b0f1f9872e5832df98cdc6ed"
+    },
+    {
+      "path": "policy/upstream/docs__roles__worker.md.txt",
+      "sourceBlobOid": "e140a1f8ed4704d571808a47e310fc3ad0d7b9f0",
+      "sourceSha256": "bb8b3e530f035a8a166b7cfa3798819ed2d7f29e5735ad1db5c3ebbe56be3dc2"
+    },
+    {
+      "path": "policy/upstream/docs__standards__COMPONENTS.md.txt",
+      "sourceBlobOid": "a1da81c812ed62b5e7a0168bfe64b0aa44d49682",
+      "sourceSha256": "3d7aa2148f0968667c65f3e2e412708d3bcdf2dc443d885dc4d31393dff52423"
+    },
+    {
+      "path": "policy/upstream/docs__standards__DOCS.md.txt",
+      "sourceBlobOid": "9bd80d765a05c7734b01e4a160fcc1c38b1feef4",
+      "sourceSha256": "ae68d84293b0487aaabc6448131775e30a79e3db77d8c519500c4c3f286600a3"
+    },
+    {
+      "path": "policy/upstream/docs__standards__GIT.md.txt",
+      "sourceBlobOid": "4b1a6f1e9818d487d0242b8e90f9609cbd97a7b7",
+      "sourceSha256": "2bfe594f4bec853ae62de8439461ecef3fd145cde79266a6cc62fe4d19f3fe26"
+    },
+    {
+      "path": "policy/upstream/docs__standards__POLICY_VERSIONING.md.txt",
+      "sourceBlobOid": "e19ed267657cdd24f946f3a6ceddda244dee0fd1",
+      "sourceSha256": "f10d24c5b54a50d61e11eaad25aa19d48e54c8037ab74ed0395778734cc6c920"
+    },
+    {
+      "path": "policy/upstream/docs__standards__SECURITY.md.txt",
+      "sourceBlobOid": "7b69848d404fe6dbb19310329b3640b5222d2071",
+      "sourceSha256": "d5017bda421c18a5e4f7d8fec62f30339cbc5989dfc2725407871798ba1a2420"
+    },
+    {
+      "path": "policy/upstream/docs__standards__TASKS.md.txt",
+      "sourceBlobOid": "75b3df63f133c247240ecf72d28e6b9f72d6b35c",
+      "sourceSha256": "ba03bdb1ff80851d95ed50cba1b52994e1fc1c672c0928b2ea9bdb57a78e051c"
+    },
+    {
+      "path": "policy/upstream/fcia__AGENT-INTERACTION.md.txt",
+      "sourceBlobOid": "285d77c1620ed63e9bedd794073931fb752a5c73",
+      "sourceSha256": "7a24d9c3d6aaa5b8d0d6ee7b0c62734dafc659d9f093749e7682150364ba526f"
+    },
+    {
+      "path": "policy/upstream/templates__component__AGENTS.md.txt",
+      "sourceBlobOid": "7a9385e465568d67c0f2496c41d553ae329600c7",
+      "sourceSha256": "835bfd4ec8ada9ad006ff8f51fa27789fd14e1b63dc66db95dda419fcad264a8"
+    },
+    {
+      "path": "policy/upstream/templates__task__ATTEMPT.md.txt",
+      "sourceBlobOid": "a13392e6a2bf7ce3b99bab32302fbdcb92667a0b",
+      "sourceSha256": "51002ea6b512170ad9e0a34bde30587840c1a16000858d91fb4c492b81047533"
+    },
+    {
+      "path": "policy/upstream/templates__task__REVIEW.md.txt",
+      "sourceBlobOid": "ea0bf077d12cf18d52f6a435506378c6f8ac763c",
+      "sourceSha256": "0a206fd56be5a7ecba1b801b1c889b5e1923b32be499c3b058ecfbb2dd7e0802"
+    },
+    {
+      "path": "policy/upstream/templates__task__TASK.md.txt",
+      "sourceBlobOid": "743bb752fcc770a9ab7e463abfca963021fbcb80",
+      "sourceSha256": "aed2949f07a2453fbe9b867c16d816a841c6a94bb39b1898ce84c03d5c11efe3"
+    }
+  ],
+  "locallyAdapted": [
+    "AGENTS.md",
+    "docs/WORKFLOW.md",
+    "policy/PROFILE.md",
+    "policy/README.md",
+    "policy/CHANGELOG.md",
+    "docs/PORTFOLIO.md"
+  ],
+  "notCopied": [
+    "product state, tasks and IDs of svc-comfyui",
+    "starter initializer, distribution archives and delivery manifest",
+    "root VERSION (would confuse product and starter versions)"
+  ]
+}
